@@ -15,7 +15,18 @@ class StatusBarController {
     private var menu: NSMenu?
     private var statusMenuItem: NSMenuItem?
     
+    /// Menu items for each edge option — kept for updating checkmarks.
+    private var edgeMenuItems: [ScreenEdge: NSMenuItem] = [:]
+    
     private(set) var currentState: ConnectionState = .cableNotDetected
+    
+    /// The currently selected edge. Changing this updates the checkmarks.
+    var selectedEdge: ScreenEdge = .right {
+        didSet { updateEdgeCheckmarks() }
+    }
+    
+    /// Called when the user picks a different edge from the menu.
+    var onEdgeChanged: ((ScreenEdge) -> Void)?
     
     /// Set up the status bar item and menu.
     func setup() {
@@ -41,6 +52,21 @@ class StatusBarController {
         
         menu?.addItem(NSMenuItem.separator())
         
+        // Edge selection submenu
+        let edgeSubmenu = NSMenu()
+        for (edge, title) in [(ScreenEdge.right, "Right Edge"), (.left, "Left Edge"), (.top, "Top Edge"), (.bottom, "Bottom Edge")] {
+            let item = NSMenuItem(title: title, action: #selector(edgeSelected(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = edge.rawValue
+            edgeMenuItems[edge] = item
+            edgeSubmenu.addItem(item)
+        }
+        let edgeMenuItem = NSMenuItem(title: "Linux Screen Edge", action: nil, keyEquivalent: "")
+        edgeMenuItem.submenu = edgeSubmenu
+        menu?.addItem(edgeMenuItem)
+        
+        menu?.addItem(NSMenuItem.separator())
+        
         // IP address reference
         let ipItem = NSMenuItem(title: "Mac USB IP: 192.168.100.1", action: nil, keyEquivalent: "")
         ipItem.isEnabled = false
@@ -56,6 +82,7 @@ class StatusBarController {
         statusItem?.menu = menu
         
         updateState(.cableNotDetected)
+        updateEdgeCheckmarks()
     }
     
     /// Update the connection state, icon, and status text.
@@ -81,6 +108,19 @@ class StatusBarController {
             button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "MouseShare")?
                 .withSymbolConfiguration(config)
         }
+    }
+    
+    private func updateEdgeCheckmarks() {
+        for (edge, item) in edgeMenuItems {
+            item.state = (edge == selectedEdge) ? .on : .off
+        }
+    }
+    
+    @objc private func edgeSelected(_ sender: NSMenuItem) {
+        guard let rawValue = sender.representedObject as? String,
+              let edge = ScreenEdge(rawValue: rawValue) else { return }
+        selectedEdge = edge
+        onEdgeChanged?(edge)
     }
     
     @objc private func quitApp() {

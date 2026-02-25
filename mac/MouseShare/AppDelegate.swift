@@ -33,6 +33,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // 2. Set up the status bar
         statusBar.setup()
+        statusBar.onEdgeChanged = { [weak self] edge in
+            self?.selectedEdge = edge
+            print("⚙️ [MouseShare] Linux screen edge changed to: \(edge.rawValue)")
+        }
         
         // 3. Set up TCP manager
         tcpManager.delegate = self
@@ -95,9 +99,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
     
+    /// Which Mac screen edge triggers the switch to Linux.
+    private var selectedEdge: ScreenEdge = .right
+    
     // MARK: - Edge Detection → Start Controlling Linux
     
     private func handleEdgeReached(_ edge: ScreenEdge) {
+        guard edge == selectedEdge else { return }
         guard tcpManager.isConnected, !isControllingLinux else { return }
         
         print("🔄 [MouseShare] Edge reached (\(edge.rawValue)) — switching control to Linux.")
