@@ -30,7 +30,8 @@ class EventCapture {
         let keyMask: CGEventMask =
             (1 << CGEventType.keyDown.rawValue) |
             (1 << CGEventType.keyUp.rawValue) |
-            (1 << CGEventType.scrollWheel.rawValue)
+            (1 << CGEventType.scrollWheel.rawValue) |
+            (1 << CGEventType.flagsChanged.rawValue)
         
         let eventMask: CGEventMask = mouseMask | buttonMask | keyMask
         
@@ -86,6 +87,10 @@ class EventCapture {
     /// Updated by raw mouse deltas while hideCursor is true.
     var virtualX: Double = 0.0
     var virtualY: Double = 0.0
+    
+    /// Previous modifier flags — used to detect which modifier key
+    /// was pressed or released in flagsChanged events.
+    private var previousFlags: UInt64 = 0
     
     /// Thread-safe flag: set from TCP background queue when Linux sends
     /// returnControl.  The event-tap callback checks this on every event
@@ -195,6 +200,24 @@ class EventCapture {
                 normalizedY: normalizedY,
                 scrollDeltaX: deltaX,
                 scrollDeltaY: deltaY
+            )
+            
+        case .flagsChanged:
+            // Modifier keys (Shift, Ctrl, Option, Command) fire flagsChanged
+            // instead of keyDown/keyUp. Determine press vs release by checking
+            // whether the modifier bit was added or removed.
+            let keyCode = Int(event.getIntegerValueField(.keyboardEventKeycode))
+            let currentFlags = event.flags.rawValue
+            let isDown = currentFlags > previousFlags
+            previousFlags = currentFlags
+            
+            let eventType: SharedEventType = isDown ? .keyDown : .keyUp
+            sharedEvent = SharedEvent(
+                type: eventType,
+                normalizedX: normalizedX,
+                normalizedY: normalizedY,
+                keyCode: keyCode,
+                modifierFlags: currentFlags
             )
             
         default:
