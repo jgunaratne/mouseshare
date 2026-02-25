@@ -33,11 +33,17 @@ class ScreenEdgeDetector {
         
         let detectedEdge: ScreenEdge?
         
-        // Only trigger on the right edge — the Linux monitor sits to the right.
-        if mouseLocation.x >= frame.maxX - edgeThreshold {
+        // NSScreen coordinates: origin is bottom-left
+        if mouseLocation.x <= frame.minX + edgeThreshold {
+            detectedEdge = .left
+        } else if mouseLocation.x >= frame.maxX - edgeThreshold {
             detectedEdge = .right
+        } else if mouseLocation.y <= frame.minY + edgeThreshold {
+            detectedEdge = .bottom
+        } else if mouseLocation.y >= frame.maxY - edgeThreshold {
+            detectedEdge = .top
         } else {
-            // Cursor is not at the right edge — reset the last triggered edge
+            // Cursor is not at any edge — reset the last triggered edge
             lastTriggeredEdge = nil
             detectedEdge = nil
         }

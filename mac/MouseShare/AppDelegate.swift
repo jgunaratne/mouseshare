@@ -106,23 +106,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     private func startControllingLinux() {
         isControllingLinux = true
+        
+        // Pin the Mac cursor at its current location (the screen edge).
+        let currentPos = NSEvent.mouseLocation
+        guard let screen = NSScreen.main else { return }
+        // NSEvent.mouseLocation is in Cocoa coords (origin bottom-left).
+        // CGWarpMouseCursorPosition needs CG coords (origin top-left).
+        let cgY = screen.frame.height - currentPos.y
+        let pinPoint = CGPoint(x: currentPos.x, y: cgY)
+        eventCapture.pinnedPosition = pinPoint
+        
+        // The Linux screen is to the right of the Mac, so the cursor
+        // enters from the left edge of the Linux display.
+        let normalizedY = min(max(Double(cgY / screen.frame.height), 0), 1)
+        eventCapture.virtualX = 0.0
+        eventCapture.virtualY = normalizedY
+        
+        eventCapture.hideCursor = true
         eventCapture.start()
-        
-        // Decouple the mouse from the cursor and hide it so the
-        // Mac cursor stays frozen while input goes to Linux.
-        CGAssociateMouseAndMouseCursorPosition(0)
-        NSCursor.hide()
-        
         statusBar.updateState(.controllingLinux)
     }
     
     private func stopControllingLinux() {
+        eventCapture.hideCursor = false
         eventCapture.stop()
         isControllingLinux = false
-        
-        // Re-couple the mouse and restore the cursor.
-        CGAssociateMouseAndMouseCursorPosition(1)
-        NSCursor.unhide()
     }
     
     private func returnControlToMac() {
@@ -213,25 +221,7 @@ extension AppDelegate: TCPManagerDelegate {
     }
     
     func eventReceived(_ event: SharedEvent) {
-        if event.type == .returnControl {
-            // Linux is returning control — place cursor at the right edge of the Mac screen
-            // at the matching vertical position.
-            if let screen = NSScreen.main {
-                let frame = screen.frame
-                let x = frame.maxX - 1
-                // CoreGraphics Y is top-down; normalizedY 0 = top
-                let y = frame.minY + CGFloat(event.normalizedY) * frame.height
-                CGWarpMouseCursorPosition(CGPoint(x: x, y: y))
-            }
-            stopControllingLinux()
-            if cableDetected {
-                statusBar.updateState(.connected)
-            } else {
-                statusBar.updateState(.cableNotDetected)
-            }
-        } else {
-            // For future bidirectional support — inject received events locally
-            eventInjector.inject(event)
-        }
+        // For future bidirectional support — inject received events locally
+        eventInjector.inject(event)
     }
 }

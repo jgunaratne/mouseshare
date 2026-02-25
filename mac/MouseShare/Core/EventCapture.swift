@@ -66,7 +66,6 @@ class EventCapture {
             if let source = runLoopSource {
                 CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, .commonModes)
             }
-            // CFMachPort is managed by the system; nil out our references
         }
         eventTap = nil
         runLoopSource = nil
@@ -77,17 +76,51 @@ class EventCapture {
         stop()
     }
     
+    /// Whether the cursor should be pinned and movement sent to Linux via deltas.
+    var hideCursor = false
+    
+    /// The position to pin the Mac cursor at (set before calling start()).
+    var pinnedPosition: CGPoint = .zero
+    
+    /// Virtual cursor position on the Linux screen (normalized 0–1).
+    /// Updated by raw mouse deltas while hideCursor is true.
+    var virtualX: Double = 0.0
+    var virtualY: Double = 0.0
+    
     // MARK: - Internal Event Processing
     
     /// Process a raw CGEvent and return nil to consume it (prevent local delivery).
     fileprivate func handleEvent(type: CGEventType, event: CGEvent) -> CGEvent? {
         guard let screen = NSScreen.main else { return nil }
         let screenSize = screen.frame.size
-        let mouseLocation = event.location
         
-        let normalizedX = Double(mouseLocation.x / screenSize.width).clamped(to: 0...1)
-        // CoreGraphics Y is top-down, normalize accordingly
-        let normalizedY = Double(mouseLocation.y / screenSize.height).clamped(to: 0...1)
+        // Compute the normalized position to use for this event.
+        // When controlling Linux, use the virtual position driven by deltas.
+        // Otherwise, use the actual Mac cursor location.
+        let normalizedX: Double
+        let normalizedY: Double
+        
+        if hideCursor {
+            // Use raw mouse deltas to update the virtual Linux cursor position.
+            // This keeps the Mac cursor frozen at the edge.
+            let deltaX = event.getDoubleValueField(.mouseEventDeltaX)
+            let deltaY = event.getDoubleValueField(.mouseEventDeltaY)
+            
+            virtualX += deltaX / Double(screenSize.width)
+            virtualY += deltaY / Double(screenSize.height)
+            virtualX = virtualX.clamped(to: 0...1)
+            virtualY = virtualY.clamped(to: 0...1)
+            
+            // Warp the Mac cursor back to the pinned position so it doesn't move.
+            CGWarpMouseCursorPosition(pinnedPosition)
+            
+            normalizedX = virtualX
+            normalizedY = virtualY
+        } else {
+            let mouseLocation = event.location
+            normalizedX = Double(mouseLocation.x / screenSize.width).clamped(to: 0...1)
+            normalizedY = Double(mouseLocation.y / screenSize.height).clamped(to: 0...1)
+        }
         
         let sharedEvent: SharedEvent
         
