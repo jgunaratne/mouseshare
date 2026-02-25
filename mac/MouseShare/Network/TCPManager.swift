@@ -14,6 +14,10 @@ class TCPManager {
     
     weak var delegate: TCPManagerDelegate?
     
+    /// Called directly on the TCP queue (NOT main thread) when a
+    /// returnControl event arrives — avoids main-thread starvation.
+    var onReturnControl: (() -> Void)?
+    
     /// Whether a client is currently connected.
     private(set) var isConnected: Bool = false
     
@@ -215,8 +219,13 @@ class TCPManager {
             // Decode the JSON payload
             do {
                 let event = try JSONDecoder().decode(SharedEvent.self, from: payloadData)
-                DispatchQueue.main.async {
-                    self?.delegate?.eventReceived(event)
+                if event.type == .returnControl {
+                    // Fire directly on TCP queue — bypasses blocked main thread.
+                    self?.onReturnControl?()
+                } else {
+                    DispatchQueue.main.async {
+                        self?.delegate?.eventReceived(event)
+                    }
                 }
             } catch {
                 print("⚠️ [TCPManager] Failed to decode event: \(error)")

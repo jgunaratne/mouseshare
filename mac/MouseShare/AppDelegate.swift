@@ -40,6 +40,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // 3. Set up TCP manager
         tcpManager.delegate = self
+        tcpManager.onReturnControl = { [weak self] in
+            // This runs on the TCP queue — sets the flag that the
+            // event tap checks on the very next event.
+            self?.eventCapture.shouldReturnControl = true
+        }
         tcpManager.startListening()
         
         // 4. Set up edge detector
@@ -127,9 +132,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // The Linux screen is to the right of the Mac, so the cursor
         // enters from the left edge of the Linux display.
         let normalizedY = min(max(Double(cgY / screen.frame.height), 0), 1)
-        eventCapture.virtualX = 0.0
+        eventCapture.virtualX = 0.01  // Slightly inset so first event doesn't trigger Linux's left-edge return
         eventCapture.virtualY = normalizedY
         
+        eventCapture.shouldReturnControl = false  // Clear any stale flag from previous transition
         eventCapture.hideCursor = true
         eventCapture.start()
         statusBar.updateState(.controllingLinux)
@@ -229,7 +235,12 @@ extension AppDelegate: TCPManagerDelegate {
     }
     
     func eventReceived(_ event: SharedEvent) {
-        // For future bidirectional support — inject received events locally
-        eventInjector.inject(event)
+        if event.type == .returnControl {
+            // Set the flag directly — this is called on the TCP background
+            // queue and the event tap will pick it up on the next event.
+            eventCapture.shouldReturnControl = true
+        } else {
+            eventInjector.inject(event)
+        }
     }
 }

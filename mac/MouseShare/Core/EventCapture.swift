@@ -87,10 +87,24 @@ class EventCapture {
     var virtualX: Double = 0.0
     var virtualY: Double = 0.0
     
+    /// Thread-safe flag: set from TCP background queue when Linux sends
+    /// returnControl.  The event-tap callback checks this on every event
+    /// so it can break out of the capture loop even when the main thread
+    /// is saturated by CGWarpMouseCursorPosition events.
+    var shouldReturnControl = false
+    
     // MARK: - Internal Event Processing
     
     /// Process a raw CGEvent and return nil to consume it (prevent local delivery).
     fileprivate func handleEvent(type: CGEventType, event: CGEvent) -> CGEvent? {
+        // Check the thread-safe flag before doing anything else.
+        if shouldReturnControl {
+            shouldReturnControl = false
+            let returnEvent = SharedEvent(type: .returnControl)
+            onEvent?(returnEvent)
+            return nil
+        }
+        
         guard let screen = NSScreen.main else { return nil }
         let screenSize = screen.frame.size
         
@@ -110,6 +124,14 @@ class EventCapture {
             virtualY += deltaY / Double(screenSize.height)
             virtualX = virtualX.clamped(to: 0...1)
             virtualY = virtualY.clamped(to: 0...1)
+            
+            // If the virtual cursor hit the left edge of the Linux screen,
+            // return control to Mac immediately — no TCP round trip needed.
+            if virtualX <= 0 {
+                let returnEvent = SharedEvent(type: .returnControl)
+                onEvent?(returnEvent)
+                return nil
+            }
             
             // Warp the Mac cursor back to the pinned position so it doesn't move.
             CGWarpMouseCursorPosition(pinnedPosition)
