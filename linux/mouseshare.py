@@ -267,6 +267,21 @@ def create_virtual_device():
 
 # ── Event Injection ───────────────────────────────────────────────────
 
+# Track currently pressed keys/buttons so we can release them all
+# when control switches back to the Mac (prevents stuck keys).
+_pressed_keys: set[int] = set()
+
+
+def _release_all_keys(device: UInput):
+    """Release every key and button that is currently held down."""
+    for code in list(_pressed_keys):
+        device.write(ecodes.EV_KEY, code, 0)
+    if _pressed_keys:
+        device.syn()
+        log.info("Released %d stuck key(s)/button(s)", len(_pressed_keys))
+    _pressed_keys.clear()
+
+
 def inject_event(event: dict, device: UInput):
     """Decode a SharedEvent dict and inject the appropriate input.
 
@@ -283,18 +298,22 @@ def inject_event(event: dict, device: UInput):
             return (True, norm_y)
 
     elif event_type == "leftMouseDown":
+        _pressed_keys.add(ecodes.BTN_LEFT)
         device.write(ecodes.EV_KEY, ecodes.BTN_LEFT, 1)
         device.syn()
 
     elif event_type == "leftMouseUp":
+        _pressed_keys.discard(ecodes.BTN_LEFT)
         device.write(ecodes.EV_KEY, ecodes.BTN_LEFT, 0)
         device.syn()
 
     elif event_type == "rightMouseDown":
+        _pressed_keys.add(ecodes.BTN_RIGHT)
         device.write(ecodes.EV_KEY, ecodes.BTN_RIGHT, 1)
         device.syn()
 
     elif event_type == "rightMouseUp":
+        _pressed_keys.discard(ecodes.BTN_RIGHT)
         device.write(ecodes.EV_KEY, ecodes.BTN_RIGHT, 0)
         device.syn()
 
@@ -307,6 +326,10 @@ def inject_event(event: dict, device: UInput):
             log.warning("Unknown Mac keycode %d — add it to the mapping table", mac_code)
             return (False, 0)
         value = 1 if event_type == "keyDown" else 0
+        if value == 1:
+            _pressed_keys.add(linux_code)
+        else:
+            _pressed_keys.discard(linux_code)
         device.write(ecodes.EV_KEY, linux_code, value)
         device.syn()
 
@@ -321,8 +344,9 @@ def inject_event(event: dict, device: UInput):
             device.syn()
 
     elif event_type == "returnControl":
-        # Mac pressed Escape — it already stopped capturing on its side.
-        log.info("Mac sent returnControl (Escape) — acknowledged")
+        # Release any keys/buttons still held down to prevent stuck keys.
+        _release_all_keys(device)
+        log.info("Mac sent returnControl — acknowledged, all keys released")
 
     return (False, 0)
 
