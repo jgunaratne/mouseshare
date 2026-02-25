@@ -107,12 +107,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func startControllingLinux() {
         isControllingLinux = true
         eventCapture.start()
+        
+        // Decouple the mouse from the cursor and hide it so the
+        // Mac cursor stays frozen while input goes to Linux.
+        CGAssociateMouseAndMouseCursorPosition(0)
+        NSCursor.hide()
+        
         statusBar.updateState(.controllingLinux)
     }
     
     private func stopControllingLinux() {
         eventCapture.stop()
         isControllingLinux = false
+        
+        // Re-couple the mouse and restore the cursor.
+        CGAssociateMouseAndMouseCursorPosition(1)
+        NSCursor.unhide()
     }
     
     private func returnControlToMac() {

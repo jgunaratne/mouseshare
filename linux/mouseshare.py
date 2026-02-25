@@ -268,12 +268,19 @@ def create_virtual_device():
 # ── Event Injection ───────────────────────────────────────────────────
 
 def inject_event(event: dict, device: UInput):
-    """Decode a SharedEvent dict and inject the appropriate input."""
+    """Decode a SharedEvent dict and inject the appropriate input.
+
+    Returns (True, normalised_y) if the cursor has hit the left edge
+    and control should be returned to the Mac; otherwise (False, 0).
+    """
 
     event_type = event.get("type")
 
     if event_type == "mouseMove":
-        _inject_mouse_move(event)
+        x, y = _inject_mouse_move(event)
+        if x <= EDGE_THRESHOLD:
+            norm_y = y / SCREEN_HEIGHT if SCREEN_HEIGHT else 0
+            return (True, norm_y)
 
     elif event_type == "leftMouseDown":
         device.write(ecodes.EV_KEY, ecodes.BTN_LEFT, 1)
@@ -294,11 +301,11 @@ def inject_event(event: dict, device: UInput):
     elif event_type in ("keyDown", "keyUp"):
         mac_code = event.get("keyCode")
         if mac_code is None:
-            return
+            return (False, 0)
         linux_code = MAC_TO_LINUX_KEYCODE.get(mac_code)
         if linux_code is None:
             log.warning("Unknown Mac keycode %d — add it to the mapping table", mac_code)
-            return
+            return (False, 0)
         value = 1 if event_type == "keyDown" else 0
         device.write(ecodes.EV_KEY, linux_code, value)
         device.syn()
@@ -306,9 +313,6 @@ def inject_event(event: dict, device: UInput):
     elif event_type == "scrollWheel":
         dx = event.get("scrollDeltaX", 0)
         dy = event.get("scrollDeltaY", 0)
-        # Mac scroll delta sign: positive = scroll up (content moves down).
-        # Linux REL_WHEEL positive = scroll up.  Should match, but negate
-        # if testing reveals inverted direction.
         if dy:
             device.write(ecodes.EV_REL, ecodes.REL_WHEEL, int(dy))
         if dx:
@@ -317,13 +321,15 @@ def inject_event(event: dict, device: UInput):
             device.syn()
 
     elif event_type == "returnControl":
-        # Handled by the caller — triggers edge detection mode.
-        pass
+        # Mac pressed Escape — it already stopped capturing on its side.
+        log.info("Mac sent returnControl (Escape) — acknowledged")
+
+    return (False, 0)
 
 
 def _inject_mouse_move(event: dict):
     """Move the cursor to the absolute screen position derived from
-    the normalised coordinates.
+    the normalised coordinates.  Returns the computed (x, y).
 
     The Mac's normalizedY is already top-down (CoreGraphics origin is
     top-left), which matches Linux X11 coordinates, so no Y-flip is
@@ -351,6 +357,8 @@ def _inject_mouse_move(event: dict):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
+
+    return (x, y)
 
 # ── Edge Detection ────────────────────────────────────────────────────
 
@@ -435,10 +443,6 @@ async def tcp_client(device: UInput):
             reader, writer = await asyncio.open_connection(MAC_IP, PORT)
             log.info("Connected to Mac")
 
-            edge_mode = False
-            edge_stop = asyncio.Event()
-            edge_task = None
-
             while True:
                 # Read 4-byte length header.
                 header = await _read_exact(reader, 4)
@@ -452,44 +456,26 @@ async def tcp_client(device: UInput):
                 payload = await _read_exact(reader, length)
                 event = json.loads(payload.decode("utf-8"))
 
-                if event.get("type") == "returnControl":
-                    # Mac is handing control to Linux.
-                    log.info("Mac sent returnControl — entering edge detection mode")
-                    edge_mode = True
-                    edge_stop.clear()
-                    edge_task = asyncio.create_task(
-                        _edge_detection_loop(writer, edge_stop)
-                    )
-                elif edge_mode:
-                    # If we're in edge detection mode and the Mac starts
-                    # sending events again, it means the Mac reclaimed
-                    # control and is now forwarding input to us again.
-                    if edge_task and not edge_task.done():
-                        edge_stop.set()
-                        edge_task.cancel()
-                        try:
-                            await edge_task
-                        except asyncio.CancelledError:
-                            pass
-                    edge_mode = False
-                    log.info("Resuming event injection from Mac")
-                    inject_event(event, device)
-                else:
-                    inject_event(event, device)
+                # Inject the event and check if the cursor hit the left edge.
+                should_return, norm_y = inject_event(event, device)
+
+                if should_return:
+                    log.info("Left edge hit — sending returnControl to Mac")
+                    return_event = {
+                        "type": "returnControl",
+                        "normalizedX": 0,
+                        "normalizedY": norm_y,
+                        "edge": "left",
+                    }
+                    ret_payload = json.dumps(return_event).encode("utf-8")
+                    ret_header = struct.pack("!I", len(ret_payload))
+                    writer.write(ret_header + ret_payload)
+                    await writer.drain()
 
         except (ConnectionError, OSError, asyncio.IncompleteReadError) as exc:
             log.warning("Connection lost: %s", exc)
         except Exception as exc:
             log.error("Unexpected error: %s", exc, exc_info=True)
-        finally:
-            # Clean up edge detection task if running
-            if 'edge_task' in dir() and edge_task and not edge_task.done():
-                edge_stop.set()
-                edge_task.cancel()
-                try:
-                    await edge_task
-                except asyncio.CancelledError:
-                    pass
 
         log.info("Reconnecting in %.0f seconds …", RECONNECT_DELAY)
         await asyncio.sleep(RECONNECT_DELAY)
