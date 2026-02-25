@@ -1,0 +1,405 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0C1E3CF2F6B9CCFABBD33CB3 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92B9D7B07FE03B6F554F2F3E /* AppDelegate.swift */; };
+		4C5B48F23A536975460607AA /* SharedEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EB585DD96689D9BBDD1C261 /* SharedEvent.swift */; };
+		5433F1D062CAB4AC8BA4C1AB /* TCPManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7F07B2A2895CD77C022B40C /* TCPManager.swift */; };
+		77A48E3DF6019C74DE738A61 /* MouseShareApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9ADB6EAAE1FAA0A9D6A2883 /* MouseShareApp.swift */; };
+		7B7E48FA6EF8B31357B3A616 /* ScreenEdgeDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBE2A07C67DD24115B787B10 /* ScreenEdgeDetector.swift */; };
+		7ECAB619E4DDD15358523AF0 /* StatusBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 967096503F1C5A0D7281C5AE /* StatusBarController.swift */; };
+		E23DFC69B0753E67246A74B5 /* EventInjector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2DC69F8F204A311B45EAD76 /* EventInjector.swift */; };
+		E2D1CAAA73F5302A364C5E1D /* EventCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4862C07AA71EFE2BC95AD73 /* EventCapture.swift */; };
+		ECA415197A15C706D23EDCA8 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ADDA8771D2D1E243DA42FD3B /* Cocoa.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		4EB585DD96689D9BBDD1C261 /* SharedEvent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SharedEvent.swift; sourceTree = "<group>"; };
+		879B0D543B749AE8D7D21312 /* MouseShare.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MouseShare.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		92B9D7B07FE03B6F554F2F3E /* AppDelegate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		967096503F1C5A0D7281C5AE /* StatusBarController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StatusBarController.swift; sourceTree = "<group>"; };
+		ADDA8771D2D1E243DA42FD3B /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
+		B4862C07AA71EFE2BC95AD73 /* EventCapture.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventCapture.swift; sourceTree = "<group>"; };
+		B709ABECA77F329ED3C96C6C /* MouseShare.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MouseShare.entitlements; sourceTree = "<group>"; };
+		C62735EBDE2B9EC6EDE3FA00 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C7F07B2A2895CD77C022B40C /* TCPManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TCPManager.swift; sourceTree = "<group>"; };
+		CBE2A07C67DD24115B787B10 /* ScreenEdgeDetector.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScreenEdgeDetector.swift; sourceTree = "<group>"; };
+		E9ADB6EAAE1FAA0A9D6A2883 /* MouseShareApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MouseShareApp.swift; sourceTree = "<group>"; };
+		F2DC69F8F204A311B45EAD76 /* EventInjector.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventInjector.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0EE37558D29026B1E5DA6D88 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ECA415197A15C706D23EDCA8 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		28C787AB5E508BE7130D509A /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				C7F07B2A2895CD77C022B40C /* TCPManager.swift */,
+			);
+			name = Network;
+			path = Network;
+			sourceTree = "<group>";
+		};
+		3C486669522CCCE6E16309A3 /* MouseShare */ = {
+			isa = PBXGroup;
+			children = (
+				847E86F2C57FF1C02DF2F101 /* Core */,
+				28C787AB5E508BE7130D509A /* Network */,
+				E1A20BFAB94BAD670EDC21C8 /* UI */,
+				E9ADB6EAAE1FAA0A9D6A2883 /* MouseShareApp.swift */,
+				92B9D7B07FE03B6F554F2F3E /* AppDelegate.swift */,
+				C62735EBDE2B9EC6EDE3FA00 /* Info.plist */,
+				B709ABECA77F329ED3C96C6C /* MouseShare.entitlements */,
+			);
+			name = MouseShare;
+			path = MouseShare;
+			sourceTree = "<group>";
+		};
+		847E86F2C57FF1C02DF2F101 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				4EB585DD96689D9BBDD1C261 /* SharedEvent.swift */,
+				B4862C07AA71EFE2BC95AD73 /* EventCapture.swift */,
+				F2DC69F8F204A311B45EAD76 /* EventInjector.swift */,
+				CBE2A07C67DD24115B787B10 /* ScreenEdgeDetector.swift */,
+			);
+			name = Core;
+			path = Core;
+			sourceTree = "<group>";
+		};
+		E05EA62FA18865291E4192B7 /* OS X */ = {
+			isa = PBXGroup;
+			children = (
+				ADDA8771D2D1E243DA42FD3B /* Cocoa.framework */,
+			);
+			name = "OS X";
+			sourceTree = "<group>";
+		};
+		E0B2740D1A7DDB4B03E2F5C6 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				E05EA62FA18865291E4192B7 /* OS X */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		E1A20BFAB94BAD670EDC21C8 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				967096503F1C5A0D7281C5AE /* StatusBarController.swift */,
+			);
+			name = UI;
+			path = UI;
+			sourceTree = "<group>";
+		};
+		F76AED8C08EE0BF963C52149 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				879B0D543B749AE8D7D21312 /* MouseShare.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		F89BBB5A201C040F5AB3BA60 = {
+			isa = PBXGroup;
+			children = (
+				F76AED8C08EE0BF963C52149 /* Products */,
+				E0B2740D1A7DDB4B03E2F5C6 /* Frameworks */,
+				3C486669522CCCE6E16309A3 /* MouseShare */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		6471AFA60FBBE4294BD31672 /* MouseShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0F4C4DDC8C8462C937319212 /* Build configuration list for PBXNativeTarget "MouseShare" */;
+			buildPhases = (
+				48B31F06551B5FC18B4A354F /* Sources */,
+				0EE37558D29026B1E5DA6D88 /* Frameworks */,
+				6EE668B022FFD820E0D72F45 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MouseShare;
+			productName = MouseShare;
+			productReference = 879B0D543B749AE8D7D21312 /* MouseShare.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		86706A7B7D8BB66DF9E8EA82 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+			};
+			buildConfigurationList = 123792E7618BD82D5A05FF28 /* Build configuration list for PBXProject "MouseShare" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = F89BBB5A201C040F5AB3BA60;
+			productRefGroup = F76AED8C08EE0BF963C52149 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6471AFA60FBBE4294BD31672 /* MouseShare */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		6EE668B022FFD820E0D72F45 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		48B31F06551B5FC18B4A354F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				77A48E3DF6019C74DE738A61 /* MouseShareApp.swift in Sources */,
+				0C1E3CF2F6B9CCFABBD33CB3 /* AppDelegate.swift in Sources */,
+				4C5B48F23A536975460607AA /* SharedEvent.swift in Sources */,
+				E2D1CAAA73F5302A364C5E1D /* EventCapture.swift in Sources */,
+				E23DFC69B0753E67246A74B5 /* EventInjector.swift in Sources */,
+				7B7E48FA6EF8B31357B3A616 /* ScreenEdgeDetector.swift in Sources */,
+				5433F1D062CAB4AC8BA4C1AB /* TCPManager.swift in Sources */,
+				7ECAB619E4DDD15358523AF0 /* StatusBarController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		5A69452BCC9DD44F1A6C4DC8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MouseShare/MouseShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MouseShare/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.junius.mouseshare;
+				PRODUCT_NAME = MouseShare;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		77FEFEADB311C595E2EF0824 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MouseShare/MouseShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MouseShare/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.junius.mouseshare;
+				PRODUCT_NAME = MouseShare;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		9979083C1149A4D18C8D0133 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_ENTITLEMENTS = MouseShare/MouseShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MouseShare/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.junius.mouseshare;
+				PRODUCT_NAME = MouseShare;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		B577B6D9FB8182CE747465E2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_ENTITLEMENTS = MouseShare/MouseShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MouseShare/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.junius.mouseshare;
+				PRODUCT_NAME = MouseShare;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0F4C4DDC8C8462C937319212 /* Build configuration list for PBXNativeTarget "MouseShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5A69452BCC9DD44F1A6C4DC8 /* Release */,
+				77FEFEADB311C595E2EF0824 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		123792E7618BD82D5A05FF28 /* Build configuration list for PBXProject "MouseShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9979083C1149A4D18C8D0133 /* Debug */,
+				B577B6D9FB8182CE747465E2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 86706A7B7D8BB66DF9E8EA82 /* Project object */;
+}
