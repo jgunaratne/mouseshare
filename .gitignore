@@ -1,0 +1,29 @@
+# macOS
+.DS_Store
+*.swp
+*~
+
+# Xcode
+mac/MouseShare.xcodeproj/project.xcworkspace/
+mac/MouseShare.xcodeproj/xcuserdata/
+mac/MouseShare.xcodeproj/xcshareddata/
+DerivedData/
+build/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+*.egg
+.venv/
+venv/

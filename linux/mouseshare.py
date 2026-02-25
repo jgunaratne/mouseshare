@@ -34,7 +34,7 @@ from evdev import UInput, ecodes
 MAC_IP = "192.168.100.1"
 PORT = 9876
 
-# Must match the actual Linux monitor resolution.
+# Detected at startup — see detect_screen_resolution().
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
 
@@ -193,6 +193,52 @@ def detect_display_server():
     else:
         log.info("Display server: X11 (will use xdotool)")
 
+
+def detect_screen_resolution():
+    """Detect the primary screen resolution and update the global constants.
+
+    Tries xrandr first (works on X11 and most XWayland setups), then
+    falls back to xdpyinfo.  If neither works, keeps the defaults.
+    """
+    global SCREEN_WIDTH, SCREEN_HEIGHT
+
+    # ── Try xrandr ──
+    if shutil.which("xrandr"):
+        try:
+            result = subprocess.run(
+                ["xrandr"], capture_output=True, text=True, timeout=5
+            )
+            for line in result.stdout.splitlines():
+                # Match the currently-active mode, e.g.  "1920x1080+0+0"
+                m = re.search(r"(\d+)x(\d+)\+\d+\+\d+", line)
+                if m:
+                    SCREEN_WIDTH = int(m.group(1))
+                    SCREEN_HEIGHT = int(m.group(2))
+                    log.info("Screen resolution (xrandr): %dx%d", SCREEN_WIDTH, SCREEN_HEIGHT)
+                    return
+        except Exception as exc:
+            log.debug("xrandr failed: %s", exc)
+
+    # ── Try xdpyinfo ──
+    if shutil.which("xdpyinfo"):
+        try:
+            result = subprocess.run(
+                ["xdpyinfo"], capture_output=True, text=True, timeout=5
+            )
+            m = re.search(r"dimensions:\s+(\d+)x(\d+)\s+pixels", result.stdout)
+            if m:
+                SCREEN_WIDTH = int(m.group(1))
+                SCREEN_HEIGHT = int(m.group(2))
+                log.info("Screen resolution (xdpyinfo): %dx%d", SCREEN_WIDTH, SCREEN_HEIGHT)
+                return
+        except Exception as exc:
+            log.debug("xdpyinfo failed: %s", exc)
+
+    log.warning(
+        "Could not detect screen resolution — using default %dx%d",
+        SCREEN_WIDTH, SCREEN_HEIGHT,
+    )
+
 # ── Virtual Input Device ──────────────────────────────────────────────
 
 def create_virtual_device():
@@ -334,24 +380,26 @@ def _get_cursor_position():
 
 
 async def _edge_detection_loop(writer: asyncio.StreamWriter, stop_event: asyncio.Event):
-    """Poll cursor position and send returnControl when an edge is reached."""
-    log.info("Edge detection active — push cursor to any screen edge to return control to Mac")
+    """Poll cursor position and send returnControl when the left edge is reached.
+
+    Only the left edge triggers return-control because the Linux monitor
+    sits to the right of the Mac monitor.
+    """
+    log.info("Edge detection active — push cursor to left screen edge to return control to Mac")
     while not stop_event.is_set():
         pos = _get_cursor_position()
         if pos:
             x, y = pos
-            at_edge = (
-                x <= EDGE_THRESHOLD
-                or x >= SCREEN_WIDTH - EDGE_THRESHOLD
-                or y <= EDGE_THRESHOLD
-                or y >= SCREEN_HEIGHT - EDGE_THRESHOLD
-            )
-            if at_edge:
-                log.info("Screen edge reached at (%d, %d) — returning control to Mac", x, y)
+            if x <= EDGE_THRESHOLD:
+                log.info("Left edge reached at (%d, %d) — returning control to Mac", x, y)
+                # Normalise Y so the Mac can place its cursor at the
+                # matching vertical position on its own screen.
+                norm_y = y / SCREEN_HEIGHT if SCREEN_HEIGHT else 0
                 return_event = {
                     "type": "returnControl",
                     "normalizedX": 0,
-                    "normalizedY": 0,
+                    "normalizedY": norm_y,
+                    "edge": "left",
                 }
                 payload = json.dumps(return_event).encode("utf-8")
                 header = struct.pack("!I", len(payload))
@@ -494,6 +542,9 @@ def main():
 
     # 3. Detect display server
     detect_display_server()
+
+    # 3b. Detect screen resolution
+    detect_screen_resolution()
 
     # 4. Create virtual input device
     device = create_virtual_device()

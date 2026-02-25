@@ -203,7 +203,25 @@ extension AppDelegate: TCPManagerDelegate {
     }
     
     func eventReceived(_ event: SharedEvent) {
-        // For future bidirectional support — inject received events locally
-        eventInjector.inject(event)
+        if event.type == .returnControl {
+            // Linux is returning control — place cursor at the right edge of the Mac screen
+            // at the matching vertical position.
+            if let screen = NSScreen.main {
+                let frame = screen.frame
+                let x = frame.maxX - 1
+                // CoreGraphics Y is top-down; normalizedY 0 = top
+                let y = frame.minY + CGFloat(event.normalizedY) * frame.height
+                CGWarpMouseCursorPosition(CGPoint(x: x, y: y))
+            }
+            stopControllingLinux()
+            if cableDetected {
+                statusBar.updateState(.connected)
+            } else {
+                statusBar.updateState(.cableNotDetected)
+            }
+        } else {
+            // For future bidirectional support — inject received events locally
+            eventInjector.inject(event)
+        }
     }
 }
