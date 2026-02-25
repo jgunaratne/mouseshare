@@ -202,15 +202,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let previouslyDetected = cableDetected
         cableDetected = detected
         
-        // Only update status bar if not connected/controlling and state changed
-        if !tcpManager.isConnected && !isControllingLinux {
-            if detected && !previouslyDetected {
-                print("🔌 [MouseShare] USB-C interface detected.")
-                statusBar.updateState(.waitingForLinux)
-            } else if !detected && previouslyDetected {
-                print("🔌 [MouseShare] USB-C interface lost.")
-                statusBar.updateState(.cableNotDetected)
+        if detected && !previouslyDetected {
+            // Cable was just plugged in — start (or restart) the TCP listener.
+            print("🔌 [MouseShare] USB-C interface detected — starting listener.")
+            tcpManager.stopListening()   // clean up any stale listener
+            tcpManager.startListening()
+            statusBar.updateState(.waitingForLinux)
+            
+        } else if !detected && previouslyDetected {
+            // Cable was just unplugged — tear everything down.
+            print("🔌 [MouseShare] USB-C interface lost — stopping listener.")
+            if isControllingLinux {
+                stopControllingLinux()
             }
+            tcpManager.stopListening()
+            statusBar.updateState(.cableNotDetected)
         }
     }
 }

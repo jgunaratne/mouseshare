@@ -462,22 +462,32 @@ async def tcp_client(device: UInput):
     Reconnects automatically on failure."""
 
     while True:
+        writer = None
         try:
             log.info("Connecting to Mac at %s:%d …", MAC_IP, PORT)
-            reader, writer = await asyncio.open_connection(MAC_IP, PORT)
+            reader, writer = await asyncio.wait_for(
+                asyncio.open_connection(MAC_IP, PORT),
+                timeout=5.0,
+            )
             log.info("Connected to Mac")
 
             while True:
-                # Read 4-byte length header.
-                header = await _read_exact(reader, 4)
+                # Read 4-byte length header with timeout.
+                header = await asyncio.wait_for(
+                    _read_exact(reader, 4),
+                    timeout=30.0,
+                )
                 length = struct.unpack("!I", header)[0]
 
                 if length == 0 or length > 1_000_000:
                     log.warning("Invalid message length: %d — dropping connection", length)
                     break
 
-                # Read the JSON payload.
-                payload = await _read_exact(reader, length)
+                # Read the JSON payload with timeout.
+                payload = await asyncio.wait_for(
+                    _read_exact(reader, length),
+                    timeout=10.0,
+                )
                 event = json.loads(payload.decode("utf-8"))
 
                 # Inject the event and check if the cursor hit the left edge.
@@ -496,10 +506,22 @@ async def tcp_client(device: UInput):
                     writer.write(ret_header + ret_payload)
                     await writer.drain()
 
+        except asyncio.TimeoutError:
+            log.warning("Connection timed out")
         except (ConnectionError, OSError, asyncio.IncompleteReadError) as exc:
             log.warning("Connection lost: %s", exc)
         except Exception as exc:
             log.error("Unexpected error: %s", exc, exc_info=True)
+        finally:
+            # Release any stuck keys/buttons before reconnecting.
+            _release_all_keys(device)
+            # Close the writer cleanly.
+            if writer is not None:
+                try:
+                    writer.close()
+                    await writer.wait_closed()
+                except Exception:
+                    pass
 
         log.info("Reconnecting in %.0f seconds …", RECONNECT_DELAY)
         await asyncio.sleep(RECONNECT_DELAY)
