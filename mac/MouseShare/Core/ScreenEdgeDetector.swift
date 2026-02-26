@@ -5,7 +5,8 @@ enum ScreenEdge: String {
     case top, bottom, left, right
 }
 
-/// Detects when the mouse cursor reaches a screen edge.
+/// Detects when the mouse cursor reaches the outermost edge of the
+/// combined multi-monitor layout (not individual monitor edges).
 /// Includes a cooldown to prevent rapid re-firing and requires
 /// the cursor to move away before the same edge fires again.
 class ScreenEdgeDetector {
@@ -25,15 +26,27 @@ class ScreenEdgeDetector {
     /// The last edge that was triggered — won't re-fire until cursor moves away.
     private var lastTriggeredEdge: ScreenEdge?
     
+    /// Compute the bounding rectangle that encloses ALL connected screens.
+    private var combinedFrame: CGRect {
+        let screens = NSScreen.screens
+        guard let first = screens.first else { return .zero }
+        var union = first.frame
+        for screen in screens.dropFirst() {
+            union = union.union(screen.frame)
+        }
+        return union
+    }
+    
     /// Check whether the mouse is at a screen edge and fire the callback if so.
     /// Call this from a global mouse event monitor.
     func check(mouseLocation: NSPoint) {
-        guard let screen = NSScreen.main else { return }
-        let frame = screen.frame
+        let frame = combinedFrame
+        guard frame != .zero else { return }
         
         let detectedEdge: ScreenEdge?
         
-        // NSScreen coordinates: origin is bottom-left
+        // NSScreen coordinates: origin is bottom-left of the primary display.
+        // The combined frame covers the full extent of all monitors.
         if mouseLocation.x <= frame.minX + edgeThreshold {
             detectedEdge = .left
         } else if mouseLocation.x >= frame.maxX - edgeThreshold {
