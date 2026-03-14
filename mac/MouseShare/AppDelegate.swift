@@ -31,8 +31,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // 1. Request Accessibility permission (prompts the user on first launch)
         requestAccessibilityPermission()
         
-        // 2. Set up the status bar
+        // 2. Restore saved edge preference
+        if let savedEdge = UserDefaults.standard.string(forKey: "selectedEdge"),
+           let edge = ScreenEdge(rawValue: savedEdge) {
+            selectedEdge = edge
+        }
+        
+        // 3. Set up the status bar
         statusBar.setup()
+        statusBar.selectedEdge = selectedEdge
         statusBar.onEdgeChanged = { [weak self] edge in
             self?.selectedEdge = edge
             print("⚙️ [MouseShare] Linux screen edge changed to: \(edge.rawValue)")
@@ -110,7 +117,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     /// Which Mac screen edge triggers the switch to Linux.
-    private var selectedEdge: ScreenEdge = .right
+    /// Persisted in UserDefaults under "selectedEdge".
+    private var selectedEdge: ScreenEdge = .right {
+        didSet {
+            UserDefaults.standard.set(selectedEdge.rawValue, forKey: "selectedEdge")
+        }
+    }
     
     // MARK: - Edge Detection → Start Controlling Linux
     
