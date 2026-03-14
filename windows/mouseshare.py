@@ -36,6 +36,18 @@ EDGE_THRESHOLD = 5
 # Seconds to wait before retrying after a dropped connection.
 RECONNECT_DELAY = 2.0
 
+# ── Mac Edge Configuration ─────────────────────────────────────────────
+# Which edge the Mac selected (updated via edgeConfig messages from Mac).
+mac_edge = "right"
+
+# The edge on THIS screen that returns control to the Mac (opposite of Mac's edge).
+OPPOSITE_EDGE = {
+    "right": "left",
+    "left": "right",
+    "top": "bottom",
+    "bottom": "top",
+}
+
 # ── Logging ────────────────────────────────────────────────────────────
 
 logging.basicConfig(
@@ -225,7 +237,27 @@ def _release_all_keys():
     _pressed_keys.clear()
 
 
-def inject_event(event: dict) -> tuple[bool, float]:
+# ── Edge Check Helper ───────────────────────────────────────────────────
+
+def _check_edge(edge: str, x: int, y: int) -> tuple[bool, float, float]:
+    """Check whether the cursor is at the given screen edge.
+
+    Returns (triggered, normalizedX, normalizedY).
+    """
+    norm_x = x / SCREEN_WIDTH if SCREEN_WIDTH else 0
+    norm_y = y / SCREEN_HEIGHT if SCREEN_HEIGHT else 0
+    if edge == "left":
+        return (x <= EDGE_THRESHOLD, 0.0, norm_y)
+    elif edge == "right":
+        return (x >= SCREEN_WIDTH - 1 - EDGE_THRESHOLD, 1.0, norm_y)
+    elif edge == "top":
+        return (y <= EDGE_THRESHOLD, norm_x, 0.0)
+    elif edge == "bottom":
+        return (y >= SCREEN_HEIGHT - 1 - EDGE_THRESHOLD, norm_x, 1.0)
+    return (False, 0.0, 0.0)
+
+
+def inject_event(event: dict) -> tuple[bool, float, str | None]:
     event_type = event.get("type")
 
     if event_type == "mouseMove":
@@ -236,9 +268,10 @@ def inject_event(event: dict) -> tuple[bool, float]:
         x = max(0, min(x, SCREEN_WIDTH - 1))
         y = max(0, min(y, SCREEN_HEIGHT - 1))
         SetCursorPos(x, y)
-        if x <= EDGE_THRESHOLD:
-            norm_y = y / SCREEN_HEIGHT if SCREEN_HEIGHT else 0
-            return (True, norm_y)
+        return_edge = OPPOSITE_EDGE.get(mac_edge, "left")
+        triggered, norm_x, norm_y = _check_edge(return_edge, x, y)
+        if triggered:
+            return (True, norm_y, return_edge)
 
     elif event_type == "leftMouseDown":
         _pressed_keys.add(-1)
@@ -279,11 +312,17 @@ def inject_event(event: dict) -> tuple[bool, float]:
         if dx:
             _send_mouse_input(MOUSEEVENTF_HWHEEL, data=int(dx * WHEEL_DELTA))
 
+    elif event_type == "edgeConfig":
+        new_edge = event.get("edge", "right")
+        global mac_edge
+        mac_edge = new_edge
+        log.info("Mac edge configured to '%s' — return edge is '%s'", mac_edge, OPPOSITE_EDGE.get(mac_edge, "left"))
+
     elif event_type == "returnControl":
         _release_all_keys()
         log.info("Mac sent returnControl — all keys released")
 
-    return (False, 0)
+    return (False, 0, None)
 
 
 # ── TCP Client ────────────────────────────────────────────────────────
@@ -332,13 +371,13 @@ async def tcp_client(tray_update=None):
                     _read_exact(reader, length), timeout=10.0,
                 )
                 event = json.loads(payload.decode("utf-8"))
-                should_return, norm_y = inject_event(event)
+                should_return, norm_y, return_edge = inject_event(event)
 
                 if should_return:
-                    log.info("Left edge hit — sending returnControl")
+                    log.info("%s edge hit — sending returnControl", return_edge.title())
                     ret = json.dumps({
                         "type": "returnControl",
-                        "normalizedX": 0, "normalizedY": norm_y, "edge": "left",
+                        "normalizedX": 0, "normalizedY": norm_y, "edge": return_edge,
                     }).encode("utf-8")
                     writer.write(struct.pack("!I", len(ret)) + ret)
                     await writer.drain()

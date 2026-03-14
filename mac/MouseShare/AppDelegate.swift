@@ -36,6 +36,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusBar.onEdgeChanged = { [weak self] edge in
             self?.selectedEdge = edge
             print("⚙️ [MouseShare] Linux screen edge changed to: \(edge.rawValue)")
+            // Notify connected companion(s) of the new edge.
+            if let self = self, self.tcpManager.isConnected {
+                let configEvent = SharedEvent(type: .edgeConfig, edge: edge.rawValue)
+                self.tcpManager.send(configEvent)
+            }
         }
         
         // 3. Set up TCP manager
@@ -128,14 +133,32 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let cgY = screen.frame.height - currentPos.y
         let pinPoint = CGPoint(x: currentPos.x, y: cgY)
         eventCapture.pinnedPosition = pinPoint
+        eventCapture.selectedEdge = selectedEdge
         
-        // The Linux screen is to the right of the Mac, so the cursor
-        // enters from the left edge of the Linux display.
+        // Set the virtual cursor entry point based on which edge was crossed.
         let normalizedY = min(max(Double(cgY / screen.frame.height), 0), 1)
-        eventCapture.virtualX = 0.01  // Slightly inset so first event doesn't trigger Linux's left-edge return
-        eventCapture.virtualY = normalizedY
+        let normalizedX = min(max(Double(currentPos.x / screen.frame.width), 0), 1)
         
-        eventCapture.shouldReturnControl = false  // Clear any stale flag from previous transition
+        switch selectedEdge {
+        case .right:
+            // Companion is to the right → cursor enters from its left edge.
+            eventCapture.virtualX = 0.01
+            eventCapture.virtualY = normalizedY
+        case .left:
+            // Companion is to the left → cursor enters from its right edge.
+            eventCapture.virtualX = 0.99
+            eventCapture.virtualY = normalizedY
+        case .top:
+            // Companion is above → cursor enters from its bottom edge.
+            eventCapture.virtualX = normalizedX
+            eventCapture.virtualY = 0.99
+        case .bottom:
+            // Companion is below → cursor enters from its top edge.
+            eventCapture.virtualX = normalizedX
+            eventCapture.virtualY = 0.01
+        }
+        
+        eventCapture.shouldReturnControl = false
         eventCapture.hideCursor = true
         eventCapture.start()
         statusBar.updateState(.controllingLinux)
@@ -148,14 +171,38 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     private func returnControlToMac() {
-        print("🔄 [MouseShare] Escape pressed — returning control to Mac.")
+        print("🔄 [MouseShare] Control returning to Mac.")
         stopControllingLinux()
         
-        // Notify Linux that control has returned to Mac
+        // Place the Mac cursor at the correct edge based on selectedEdge.
+        if let screen = NSScreen.main {
+            let w = screen.frame.width
+            let h = screen.frame.height
+            let cursorPoint: CGPoint
+            
+            switch selectedEdge {
+            case .right:
+                // Returning from the right — place cursor at right edge.
+                cursorPoint = CGPoint(x: w - 1, y: eventCapture.virtualY * Double(h))
+            case .left:
+                // Returning from the left — place cursor at left edge.
+                cursorPoint = CGPoint(x: 1, y: eventCapture.virtualY * Double(h))
+            case .top:
+                // Returning from above — place cursor at top edge (CG y=0).
+                cursorPoint = CGPoint(x: eventCapture.virtualX * Double(w), y: 1)
+            case .bottom:
+                // Returning from below — place cursor at bottom edge.
+                cursorPoint = CGPoint(x: eventCapture.virtualX * Double(w), y: h - 1)
+            }
+            
+            CGWarpMouseCursorPosition(cursorPoint)
+        }
+        
+        // Notify companion that control has returned to Mac.
         let returnEvent = SharedEvent(type: .returnControl)
         tcpManager.send(returnEvent)
         
-        // Update status bar based on connection state
+        // Update status bar based on connection state.
         if tcpManager.isConnected {
             statusBar.updateState(.connected)
         } else if cableDetected {
@@ -225,8 +272,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 extension AppDelegate: TCPManagerDelegate {
     func clientConnected() {
-        print("🟢 [MouseShare] Linux client connected.")
+        print("🟢 [MouseShare] Companion client connected.")
         statusBar.updateState(.connected)
+        // Inform the companion which edge the Mac has selected.
+        let configEvent = SharedEvent(type: .edgeConfig, edge: selectedEdge.rawValue)
+        tcpManager.send(configEvent)
     }
     
     func clientDisconnected() {

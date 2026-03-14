@@ -11,6 +11,7 @@ enum SharedEventType: String, Codable {
     case keyUp
     case scrollWheel
     case returnControl
+    case edgeConfig
 }
 
 /// A single input event with normalized coordinates and optional keyboard/scroll data.
@@ -23,6 +24,10 @@ struct SharedEvent: Codable {
     
     /// Mouse Y position normalized to 0–1 (0 = top edge, 1 = bottom edge)
     let normalizedY: Double
+    
+    /// Screen edge name ("left", "right", "top", "bottom") — used in
+    /// edgeConfig and returnControl messages.
+    let edge: String?
     
     /// Virtual key code for keyboard events (e.g. 53 = Escape)
     let keyCode: Int?
@@ -40,6 +45,7 @@ struct SharedEvent: Codable {
         type: SharedEventType,
         normalizedX: Double = 0,
         normalizedY: Double = 0,
+        edge: String? = nil,
         keyCode: Int? = nil,
         modifierFlags: UInt64? = nil,
         scrollDeltaX: Double? = nil,
@@ -48,6 +54,7 @@ struct SharedEvent: Codable {
         self.type = type
         self.normalizedX = normalizedX
         self.normalizedY = normalizedY
+        self.edge = edge
         self.keyCode = keyCode
         self.modifierFlags = modifierFlags
         self.scrollDeltaX = scrollDeltaX

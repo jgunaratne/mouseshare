@@ -98,6 +98,10 @@ class EventCapture {
     /// is saturated by CGWarpMouseCursorPosition events.
     var shouldReturnControl = false
     
+    /// Which Mac screen edge triggered the switch.  Determines which
+    /// virtual-cursor boundary returns control (the opposite edge).
+    var selectedEdge: ScreenEdge = .right
+    
     // MARK: - Internal Event Processing
     
     /// Process a raw CGEvent and return nil to consume it (prevent local delivery).
@@ -130,9 +134,16 @@ class EventCapture {
             virtualX = virtualX.clamped(to: 0...1)
             virtualY = virtualY.clamped(to: 0...1)
             
-            // If the virtual cursor hit the left edge of the Linux screen,
-            // return control to Mac immediately — no TCP round trip needed.
-            if virtualX <= 0 {
+            // If the virtual cursor hit the opposite edge of the companion
+            // screen, return control to Mac immediately.
+            let shouldReturn: Bool
+            switch selectedEdge {
+            case .right:  shouldReturn = virtualX <= 0   // companion is to the right → return on its left
+            case .left:   shouldReturn = virtualX >= 1   // companion is to the left  → return on its right
+            case .top:    shouldReturn = virtualY >= 1   // companion is above        → return on its bottom
+            case .bottom: shouldReturn = virtualY <= 0   // companion is below        → return on its top
+            }
+            if shouldReturn {
                 let returnEvent = SharedEvent(type: .returnControl)
                 onEvent?(returnEvent)
                 return nil

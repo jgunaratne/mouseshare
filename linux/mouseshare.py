@@ -47,6 +47,18 @@ RECONNECT_DELAY = 2.0
 # Edge-detection polling interval in seconds.
 EDGE_POLL_INTERVAL = 0.1
 
+# ── Mac Edge Configuration ─────────────────────────────────────────────
+# Which edge the Mac selected (updated via edgeConfig messages from Mac).
+mac_edge = "right"
+
+# The edge on THIS screen that returns control to the Mac (opposite of Mac's edge).
+OPPOSITE_EDGE = {
+    "right": "left",
+    "left": "right",
+    "top": "bottom",
+    "bottom": "top",
+}
+
 # ── Logging ────────────────────────────────────────────────────────────
 
 logging.basicConfig(
@@ -285,17 +297,18 @@ def _release_all_keys(device: UInput):
 def inject_event(event: dict, device: UInput):
     """Decode a SharedEvent dict and inject the appropriate input.
 
-    Returns (True, normalised_y) if the cursor has hit the left edge
-    and control should be returned to the Mac; otherwise (False, 0).
+    Returns (True, normalised_y, edge_name) if the cursor has hit the return
+    edge and control should be returned to the Mac; otherwise (False, 0, None).
     """
 
     event_type = event.get("type")
 
     if event_type == "mouseMove":
         x, y = _inject_mouse_move(event)
-        if x <= EDGE_THRESHOLD:
-            norm_y = y / SCREEN_HEIGHT if SCREEN_HEIGHT else 0
-            return (True, norm_y)
+        return_edge = OPPOSITE_EDGE.get(mac_edge, "left")
+        triggered, norm_x, norm_y = _check_edge(return_edge, x, y)
+        if triggered:
+            return (True, norm_y, return_edge)
 
     elif event_type == "leftMouseDown":
         _pressed_keys.add(ecodes.BTN_LEFT)
@@ -343,12 +356,19 @@ def inject_event(event: dict, device: UInput):
         if dy or dx:
             device.syn()
 
+    elif event_type == "edgeConfig":
+        # Mac is telling us which edge it selected.
+        new_edge = event.get("edge", "right")
+        global mac_edge
+        mac_edge = new_edge
+        log.info("Mac edge configured to '%s' — return edge is '%s'", mac_edge, OPPOSITE_EDGE.get(mac_edge, "left"))
+
     elif event_type == "returnControl":
         # Release any keys/buttons still held down to prevent stuck keys.
         _release_all_keys(device)
         log.info("Mac sent returnControl — acknowledged, all keys released")
 
-    return (False, 0)
+    return (False, 0, None)
 
 
 def _inject_mouse_move(event: dict):
@@ -386,6 +406,23 @@ def _inject_mouse_move(event: dict):
 
 # ── Edge Detection ────────────────────────────────────────────────────
 
+def _check_edge(edge: str, x: int, y: int) -> tuple[bool, float, float]:
+    """Check whether the cursor is at the given screen edge.
+
+    Returns (triggered, normalizedX, normalizedY).
+    """
+    norm_x = x / SCREEN_WIDTH if SCREEN_WIDTH else 0
+    norm_y = y / SCREEN_HEIGHT if SCREEN_HEIGHT else 0
+    if edge == "left":
+        return (x <= EDGE_THRESHOLD, 0.0, norm_y)
+    elif edge == "right":
+        return (x >= SCREEN_WIDTH - 1 - EDGE_THRESHOLD, 1.0, norm_y)
+    elif edge == "top":
+        return (y <= EDGE_THRESHOLD, norm_x, 0.0)
+    elif edge == "bottom":
+        return (y >= SCREEN_HEIGHT - 1 - EDGE_THRESHOLD, norm_x, 1.0)
+    return (False, 0.0, 0.0)
+
 def _get_cursor_position():
     """Return (x, y) of the current cursor, or None on failure."""
     try:
@@ -412,26 +449,21 @@ def _get_cursor_position():
 
 
 async def _edge_detection_loop(writer: asyncio.StreamWriter, stop_event: asyncio.Event):
-    """Poll cursor position and send returnControl when the left edge is reached.
-
-    Only the left edge triggers return-control because the Linux monitor
-    sits to the right of the Mac monitor.
-    """
-    log.info("Edge detection active — push cursor to left screen edge to return control to Mac")
+    """Poll cursor position and send returnControl when the return edge is reached."""
+    return_edge = OPPOSITE_EDGE.get(mac_edge, "left")
+    log.info("Edge detection active — push cursor to %s screen edge to return control to Mac", return_edge)
     while not stop_event.is_set():
         pos = _get_cursor_position()
         if pos:
             x, y = pos
-            if x <= EDGE_THRESHOLD:
-                log.info("Left edge reached at (%d, %d) — returning control to Mac", x, y)
-                # Normalise Y so the Mac can place its cursor at the
-                # matching vertical position on its own screen.
-                norm_y = y / SCREEN_HEIGHT if SCREEN_HEIGHT else 0
+            triggered, norm_x, norm_y = _check_edge(return_edge, x, y)
+            if triggered:
+                log.info("%s edge reached at (%d, %d) — returning control to Mac", return_edge.title(), x, y)
                 return_event = {
                     "type": "returnControl",
-                    "normalizedX": 0,
+                    "normalizedX": norm_x,
                     "normalizedY": norm_y,
-                    "edge": "left",
+                    "edge": return_edge,
                 }
                 payload = json.dumps(return_event).encode("utf-8")
                 header = struct.pack("!I", len(payload))
@@ -490,16 +522,16 @@ async def tcp_client(device: UInput):
                 )
                 event = json.loads(payload.decode("utf-8"))
 
-                # Inject the event and check if the cursor hit the left edge.
-                should_return, norm_y = inject_event(event, device)
+                # Inject the event and check if the cursor hit the return edge.
+                should_return, norm_y, return_edge = inject_event(event, device)
 
                 if should_return:
-                    log.info("Left edge hit — sending returnControl to Mac")
+                    log.info("%s edge hit — sending returnControl to Mac", return_edge.title())
                     return_event = {
                         "type": "returnControl",
                         "normalizedX": 0,
                         "normalizedY": norm_y,
-                        "edge": "left",
+                        "edge": return_edge,
                     }
                     ret_payload = json.dumps(return_event).encode("utf-8")
                     ret_header = struct.pack("!I", len(ret_payload))
