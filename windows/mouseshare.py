@@ -62,6 +62,8 @@ log = logging.getLogger("mouseshare")
 INPUT_MOUSE = 0
 INPUT_KEYBOARD = 1
 
+MOUSEEVENTF_MOVE = 0x0001
+MOUSEEVENTF_ABSOLUTE = 0x8000
 MOUSEEVENTF_LEFTDOWN = 0x0002
 MOUSEEVENTF_LEFTUP = 0x0004
 MOUSEEVENTF_RIGHTDOWN = 0x0008
@@ -268,7 +270,15 @@ def inject_event(event: dict) -> tuple[bool, float, str | None]:
         y = int(ny * SCREEN_HEIGHT)
         x = max(0, min(x, SCREEN_WIDTH - 1))
         y = max(0, min(y, SCREEN_HEIGHT - 1))
-        SetCursorPos(x, y)
+        # Use SendInput with MOUSEEVENTF_ABSOLUTE so Windows sees real
+        # mouse input events and keeps the cursor visible.  Absolute
+        # coordinates are normalised to 0–65535.
+        abs_x = int(x * 65535 / (SCREEN_WIDTH - 1)) if SCREEN_WIDTH > 1 else 0
+        abs_y = int(y * 65535 / (SCREEN_HEIGHT - 1)) if SCREEN_HEIGHT > 1 else 0
+        _send_mouse_input(
+            MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE,
+            dx=abs_x, dy=abs_y,
+        )
         return_edge = OPPOSITE_EDGE.get(mac_edge, "left")
         triggered, norm_x, norm_y = _check_edge(return_edge, x, y)
         if triggered:
