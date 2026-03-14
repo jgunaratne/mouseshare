@@ -21,6 +21,7 @@ project.build_configurations.each do |config|
   config.build_settings['GENERATE_INFOPLIST_FILE'] = 'NO'
   config.build_settings['CURRENT_PROJECT_VERSION'] = '1'
   config.build_settings['MARKETING_VERSION'] = '1.0'
+  config.build_settings['ASSETCATALOG_COMPILER_APPICON_NAME'] = 'AppIcon'
 end
 
 # --- Native Target ---
@@ -39,6 +40,7 @@ target.build_configurations.each do |config|
   config.build_settings['GENERATE_INFOPLIST_FILE'] = 'NO'
   config.build_settings['CURRENT_PROJECT_VERSION'] = '1'
   config.build_settings['MARKETING_VERSION'] = '1.0'
+  config.build_settings['ASSETCATALOG_COMPILER_APPICON_NAME'] = 'AppIcon'
   config.build_settings['LD_RUNPATH_SEARCH_PATHS'] = '$(inherited) @executable_path/../Frameworks'
 end
 
@@ -76,6 +78,10 @@ source_files.each do |group, paths|
     target.source_build_phase.add_file_reference(file_ref)
   end
 end
+
+# --- Asset Catalog ---
+assets_ref = mouseshare_group.new_reference('Assets.xcassets')
+target.resources_build_phase.add_file_reference(assets_ref)
 
 # --- Resource/Config Files (not compiled, just referenced) ---
 info_ref = mouseshare_group.new_reference('Info.plist')

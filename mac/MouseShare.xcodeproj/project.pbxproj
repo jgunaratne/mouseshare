@@ -7,132 +7,135 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0C1E3CF2F6B9CCFABBD33CB3 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92B9D7B07FE03B6F554F2F3E /* AppDelegate.swift */; };
-		4C5B48F23A536975460607AA /* SharedEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EB585DD96689D9BBDD1C261 /* SharedEvent.swift */; };
-		5433F1D062CAB4AC8BA4C1AB /* TCPManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7F07B2A2895CD77C022B40C /* TCPManager.swift */; };
-		77A48E3DF6019C74DE738A61 /* MouseShareApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9ADB6EAAE1FAA0A9D6A2883 /* MouseShareApp.swift */; };
-		7B7E48FA6EF8B31357B3A616 /* ScreenEdgeDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBE2A07C67DD24115B787B10 /* ScreenEdgeDetector.swift */; };
-		7ECAB619E4DDD15358523AF0 /* StatusBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 967096503F1C5A0D7281C5AE /* StatusBarController.swift */; };
-		E23DFC69B0753E67246A74B5 /* EventInjector.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2DC69F8F204A311B45EAD76 /* EventInjector.swift */; };
-		E2D1CAAA73F5302A364C5E1D /* EventCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4862C07AA71EFE2BC95AD73 /* EventCapture.swift */; };
-		ECA415197A15C706D23EDCA8 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ADDA8771D2D1E243DA42FD3B /* Cocoa.framework */; };
+		364FFB9C21ECFC2E54DFA042 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8568C028CE5D3A8B57DD3406 /* AppDelegate.swift */; };
+		4AE6FD6629706F5892F7E70F /* MouseShareApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4CEA3B00CABAFF803A54F37 /* MouseShareApp.swift */; };
+		6B09A58EC8722BCD0C5FF608 /* StatusBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71748AAF4FAD2341C9D5D23 /* StatusBarController.swift */; };
+		70BD064CBCC731389B9DDF00 /* ScreenEdgeDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13250C36E6F0EF0753B3188 /* ScreenEdgeDetector.swift */; };
+		8AD7FD0CCAE103E375263F3B /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 253C11711D195EF72C6F030B /* Cocoa.framework */; };
+		97CFB84EDEDCED121F42A71F /* EventCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67956AD4AE6E650CEC9FA377 /* EventCapture.swift */; };
+		B224B27786DDBA156A4669D1 /* SharedEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86E35AAE4DD0A83A7E1A716 /* SharedEvent.swift */; };
+		D8550ED75A004F4A34F27BD4 /* TCPManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4F5477D12074A1DBB609C55 /* TCPManager.swift */; };
+		E462C8E369F2353E34BD519A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 21A8C103B7747D216DE32C88 /* Assets.xcassets */; };
+		F17E4F72702D05889B4BFC07 /* EventInjector.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7F8EAA8FD2E0E37C382BE5 /* EventInjector.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		4EB585DD96689D9BBDD1C261 /* SharedEvent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SharedEvent.swift; sourceTree = "<group>"; };
-		879B0D543B749AE8D7D21312 /* MouseShare.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MouseShare.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		92B9D7B07FE03B6F554F2F3E /* AppDelegate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		967096503F1C5A0D7281C5AE /* StatusBarController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StatusBarController.swift; sourceTree = "<group>"; };
-		ADDA8771D2D1E243DA42FD3B /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
-		B4862C07AA71EFE2BC95AD73 /* EventCapture.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventCapture.swift; sourceTree = "<group>"; };
-		B709ABECA77F329ED3C96C6C /* MouseShare.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MouseShare.entitlements; sourceTree = "<group>"; };
-		C62735EBDE2B9EC6EDE3FA00 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		C7F07B2A2895CD77C022B40C /* TCPManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TCPManager.swift; sourceTree = "<group>"; };
-		CBE2A07C67DD24115B787B10 /* ScreenEdgeDetector.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScreenEdgeDetector.swift; sourceTree = "<group>"; };
-		E9ADB6EAAE1FAA0A9D6A2883 /* MouseShareApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MouseShareApp.swift; sourceTree = "<group>"; };
-		F2DC69F8F204A311B45EAD76 /* EventInjector.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventInjector.swift; sourceTree = "<group>"; };
+		21A8C103B7747D216DE32C88 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		253C11711D195EF72C6F030B /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
+		288805CEDF3A8B22FB1ED7BE /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		67956AD4AE6E650CEC9FA377 /* EventCapture.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventCapture.swift; sourceTree = "<group>"; };
+		8568C028CE5D3A8B57DD3406 /* AppDelegate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		A1999F441FE783DD308C09E7 /* MouseShare.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = MouseShare.entitlements; sourceTree = "<group>"; };
+		A71748AAF4FAD2341C9D5D23 /* StatusBarController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StatusBarController.swift; sourceTree = "<group>"; };
+		B86E35AAE4DD0A83A7E1A716 /* SharedEvent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SharedEvent.swift; sourceTree = "<group>"; };
+		C13250C36E6F0EF0753B3188 /* ScreenEdgeDetector.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScreenEdgeDetector.swift; sourceTree = "<group>"; };
+		E4F5477D12074A1DBB609C55 /* TCPManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TCPManager.swift; sourceTree = "<group>"; };
+		EE7F8EAA8FD2E0E37C382BE5 /* EventInjector.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventInjector.swift; sourceTree = "<group>"; };
+		F4CEA3B00CABAFF803A54F37 /* MouseShareApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MouseShareApp.swift; sourceTree = "<group>"; };
+		F5898F238260CBA4479C473E /* MouseShare.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MouseShare.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		0EE37558D29026B1E5DA6D88 /* Frameworks */ = {
+		57B5A8D1039D65DA56E6CA5D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				ECA415197A15C706D23EDCA8 /* Cocoa.framework in Frameworks */,
+				8AD7FD0CCAE103E375263F3B /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		28C787AB5E508BE7130D509A /* Network */ = {
+		100F1DEF683A39F0DD49997C /* Network */ = {
 			isa = PBXGroup;
 			children = (
-				C7F07B2A2895CD77C022B40C /* TCPManager.swift */,
+				E4F5477D12074A1DBB609C55 /* TCPManager.swift */,
 			);
 			name = Network;
 			path = Network;
 			sourceTree = "<group>";
 		};
-		3C486669522CCCE6E16309A3 /* MouseShare */ = {
+		4EEC4DE8B56CB795E7F463F7 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				847E86F2C57FF1C02DF2F101 /* Core */,
-				28C787AB5E508BE7130D509A /* Network */,
-				E1A20BFAB94BAD670EDC21C8 /* UI */,
-				E9ADB6EAAE1FAA0A9D6A2883 /* MouseShareApp.swift */,
-				92B9D7B07FE03B6F554F2F3E /* AppDelegate.swift */,
-				C62735EBDE2B9EC6EDE3FA00 /* Info.plist */,
-				B709ABECA77F329ED3C96C6C /* MouseShare.entitlements */,
+				F5898F238260CBA4479C473E /* MouseShare.app */,
 			);
-			name = MouseShare;
-			path = MouseShare;
+			name = Products;
 			sourceTree = "<group>";
 		};
-		847E86F2C57FF1C02DF2F101 /* Core */ = {
+		9DE28A280A91CCD83F61468D /* Core */ = {
 			isa = PBXGroup;
 			children = (
-				4EB585DD96689D9BBDD1C261 /* SharedEvent.swift */,
-				B4862C07AA71EFE2BC95AD73 /* EventCapture.swift */,
-				F2DC69F8F204A311B45EAD76 /* EventInjector.swift */,
-				CBE2A07C67DD24115B787B10 /* ScreenEdgeDetector.swift */,
+				B86E35AAE4DD0A83A7E1A716 /* SharedEvent.swift */,
+				67956AD4AE6E650CEC9FA377 /* EventCapture.swift */,
+				EE7F8EAA8FD2E0E37C382BE5 /* EventInjector.swift */,
+				C13250C36E6F0EF0753B3188 /* ScreenEdgeDetector.swift */,
 			);
 			name = Core;
 			path = Core;
 			sourceTree = "<group>";
 		};
-		E05EA62FA18865291E4192B7 /* OS X */ = {
+		B4D023152F66669C41D387F3 /* UI */ = {
 			isa = PBXGroup;
 			children = (
-				ADDA8771D2D1E243DA42FD3B /* Cocoa.framework */,
-			);
-			name = "OS X";
-			sourceTree = "<group>";
-		};
-		E0B2740D1A7DDB4B03E2F5C6 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				E05EA62FA18865291E4192B7 /* OS X */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		E1A20BFAB94BAD670EDC21C8 /* UI */ = {
-			isa = PBXGroup;
-			children = (
-				967096503F1C5A0D7281C5AE /* StatusBarController.swift */,
+				A71748AAF4FAD2341C9D5D23 /* StatusBarController.swift */,
 			);
 			name = UI;
 			path = UI;
 			sourceTree = "<group>";
 		};
-		F76AED8C08EE0BF963C52149 /* Products */ = {
+		CD0DF5828CC44A2E2BB0D979 = {
 			isa = PBXGroup;
 			children = (
-				879B0D543B749AE8D7D21312 /* MouseShare.app */,
+				4EEC4DE8B56CB795E7F463F7 /* Products */,
+				D2E5F46038D12300641609DE /* Frameworks */,
+				EC390AE1F3ECD3BBBC77AAF5 /* MouseShare */,
 			);
-			name = Products;
 			sourceTree = "<group>";
 		};
-		F89BBB5A201C040F5AB3BA60 = {
+		D2E5F46038D12300641609DE /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				F76AED8C08EE0BF963C52149 /* Products */,
-				E0B2740D1A7DDB4B03E2F5C6 /* Frameworks */,
-				3C486669522CCCE6E16309A3 /* MouseShare */,
+				F696AFEA5F3363CC07CBACDB /* OS X */,
 			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		EC390AE1F3ECD3BBBC77AAF5 /* MouseShare */ = {
+			isa = PBXGroup;
+			children = (
+				9DE28A280A91CCD83F61468D /* Core */,
+				100F1DEF683A39F0DD49997C /* Network */,
+				B4D023152F66669C41D387F3 /* UI */,
+				F4CEA3B00CABAFF803A54F37 /* MouseShareApp.swift */,
+				8568C028CE5D3A8B57DD3406 /* AppDelegate.swift */,
+				21A8C103B7747D216DE32C88 /* Assets.xcassets */,
+				288805CEDF3A8B22FB1ED7BE /* Info.plist */,
+				A1999F441FE783DD308C09E7 /* MouseShare.entitlements */,
+			);
+			name = MouseShare;
+			path = MouseShare;
+			sourceTree = "<group>";
+		};
+		F696AFEA5F3363CC07CBACDB /* OS X */ = {
+			isa = PBXGroup;
+			children = (
+				253C11711D195EF72C6F030B /* Cocoa.framework */,
+			);
+			name = "OS X";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		6471AFA60FBBE4294BD31672 /* MouseShare */ = {
+		CE50AF60635ADF41196BBD75 /* MouseShare */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0F4C4DDC8C8462C937319212 /* Build configuration list for PBXNativeTarget "MouseShare" */;
+			buildConfigurationList = 6F58F670C13BDA691DF9D26D /* Build configuration list for PBXNativeTarget "MouseShare" */;
 			buildPhases = (
-				48B31F06551B5FC18B4A354F /* Sources */,
-				0EE37558D29026B1E5DA6D88 /* Frameworks */,
-				6EE668B022FFD820E0D72F45 /* Resources */,
+				40E1411F062E4566B9F6F6A1 /* Sources */,
+				57B5A8D1039D65DA56E6CA5D /* Frameworks */,
+				75A4E061038CD761329C2D5F /* Resources */,
 			);
 			buildRules = (
 			);
@@ -140,19 +143,19 @@
 			);
 			name = MouseShare;
 			productName = MouseShare;
-			productReference = 879B0D543B749AE8D7D21312 /* MouseShare.app */;
+			productReference = F5898F238260CBA4479C473E /* MouseShare.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		86706A7B7D8BB66DF9E8EA82 /* Project object */ = {
+		541842F4A0EAC0018C972FAC /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1500;
 				LastUpgradeCheck = 1500;
 			};
-			buildConfigurationList = 123792E7618BD82D5A05FF28 /* Build configuration list for PBXProject "MouseShare" */;
+			buildConfigurationList = 19C11EA815B02671E1756343 /* Build configuration list for PBXProject "MouseShare" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -160,68 +163,47 @@
 				en,
 				Base,
 			);
-			mainGroup = F89BBB5A201C040F5AB3BA60;
-			productRefGroup = F76AED8C08EE0BF963C52149 /* Products */;
+			mainGroup = CD0DF5828CC44A2E2BB0D979;
+			productRefGroup = 4EEC4DE8B56CB795E7F463F7 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				6471AFA60FBBE4294BD31672 /* MouseShare */,
+				CE50AF60635ADF41196BBD75 /* MouseShare */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		6EE668B022FFD820E0D72F45 /* Resources */ = {
+		75A4E061038CD761329C2D5F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E462C8E369F2353E34BD519A /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		48B31F06551B5FC18B4A354F /* Sources */ = {
+		40E1411F062E4566B9F6F6A1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				77A48E3DF6019C74DE738A61 /* MouseShareApp.swift in Sources */,
-				0C1E3CF2F6B9CCFABBD33CB3 /* AppDelegate.swift in Sources */,
-				4C5B48F23A536975460607AA /* SharedEvent.swift in Sources */,
-				E2D1CAAA73F5302A364C5E1D /* EventCapture.swift in Sources */,
-				E23DFC69B0753E67246A74B5 /* EventInjector.swift in Sources */,
-				7B7E48FA6EF8B31357B3A616 /* ScreenEdgeDetector.swift in Sources */,
-				5433F1D062CAB4AC8BA4C1AB /* TCPManager.swift in Sources */,
-				7ECAB619E4DDD15358523AF0 /* StatusBarController.swift in Sources */,
+				4AE6FD6629706F5892F7E70F /* MouseShareApp.swift in Sources */,
+				364FFB9C21ECFC2E54DFA042 /* AppDelegate.swift in Sources */,
+				B224B27786DDBA156A4669D1 /* SharedEvent.swift in Sources */,
+				97CFB84EDEDCED121F42A71F /* EventCapture.swift in Sources */,
+				F17E4F72702D05889B4BFC07 /* EventInjector.swift in Sources */,
+				70BD064CBCC731389B9DDF00 /* ScreenEdgeDetector.swift in Sources */,
+				D8550ED75A004F4A34F27BD4 /* TCPManager.swift in Sources */,
+				6B09A58EC8722BCD0C5FF608 /* StatusBarController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		5A69452BCC9DD44F1A6C4DC8 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = MouseShare/MouseShare.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_APP_SANDBOX = NO;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = MouseShare/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.junius.mouseshare;
-				PRODUCT_NAME = MouseShare;
-				SDKROOT = macosx;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
-		};
-		77FEFEADB311C595E2EF0824 /* Debug */ = {
+		0E2EE289FFBDEB6AF9CAF9D1 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -243,10 +225,11 @@
 			};
 			name = Debug;
 		};
-		9979083C1149A4D18C8D0133 /* Debug */ = {
+		708B3D988F0EF9C0948F9385 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -314,10 +297,11 @@
 			};
 			name = Debug;
 		};
-		B577B6D9FB8182CE747465E2 /* Release */ = {
+		85BE45104C78A056888B32F8 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -378,28 +362,50 @@
 			};
 			name = Release;
 		};
+		C1F059F62FE8E09F33530AA6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MouseShare/MouseShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MouseShare/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.junius.mouseshare;
+				PRODUCT_NAME = MouseShare;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		0F4C4DDC8C8462C937319212 /* Build configuration list for PBXNativeTarget "MouseShare" */ = {
+		19C11EA815B02671E1756343 /* Build configuration list for PBXProject "MouseShare" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				5A69452BCC9DD44F1A6C4DC8 /* Release */,
-				77FEFEADB311C595E2EF0824 /* Debug */,
+				708B3D988F0EF9C0948F9385 /* Debug */,
+				85BE45104C78A056888B32F8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		123792E7618BD82D5A05FF28 /* Build configuration list for PBXProject "MouseShare" */ = {
+		6F58F670C13BDA691DF9D26D /* Build configuration list for PBXNativeTarget "MouseShare" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				9979083C1149A4D18C8D0133 /* Debug */,
-				B577B6D9FB8182CE747465E2 /* Release */,
+				C1F059F62FE8E09F33530AA6 /* Release */,
+				0E2EE289FFBDEB6AF9CAF9D1 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 86706A7B7D8BB66DF9E8EA82 /* Project object */;
+	rootObject = 541842F4A0EAC0018C972FAC /* Project object */;
 }
