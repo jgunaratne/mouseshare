@@ -46,6 +46,7 @@ class TCPManager {
             
             // Enable TCP keepalive at the OS level for faster dead-peer detection.
             if let tcpOptions = params.defaultProtocolStack.transportProtocol as? NWProtocolTCP.Options {
+                tcpOptions.noDelay = true         // disable Nagle — send packets immediately
                 tcpOptions.enableKeepalive = true
                 tcpOptions.keepaliveIdle = 30     // seconds before first keepalive probe
                 tcpOptions.keepaliveInterval = 10 // seconds between probes

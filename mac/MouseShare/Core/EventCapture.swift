@@ -102,6 +102,13 @@ class EventCapture {
     /// virtual-cursor boundary returns control (the opposite edge).
     var selectedEdge: ScreenEdge = .right
     
+    /// Minimum interval between mouse move events (seconds).
+    /// ~120 fps = 1/120 ≈ 0.0083s.
+    private let mouseSendInterval: Double = 1.0 / 120.0
+    
+    /// Timestamp of the last mouse move event we actually sent.
+    private var lastMouseSendTime: CFAbsoluteTime = 0
+    
     // MARK: - Internal Event Processing
     
     /// Process a raw CGEvent and return nil to consume it (prevent local delivery).
@@ -164,6 +171,12 @@ class EventCapture {
         
         switch type {
         case .mouseMoved, .leftMouseDragged, .rightMouseDragged:
+            // Throttle mouse moves to ~120/s to avoid flooding the TCP pipe.
+            let now = CFAbsoluteTimeGetCurrent()
+            if now - lastMouseSendTime < mouseSendInterval {
+                return nil  // skip this event, we'll catch up on the next one
+            }
+            lastMouseSendTime = now
             sharedEvent = SharedEvent(
                 type: .mouseMove,
                 normalizedX: normalizedX,
