@@ -258,6 +258,7 @@ def _check_edge(edge: str, x: int, y: int) -> tuple[bool, float, float]:
 
 
 def inject_event(event: dict) -> tuple[bool, float, str | None]:
+    global mac_edge
     event_type = event.get("type")
 
     if event_type == "mouseMove":
@@ -314,7 +315,6 @@ def inject_event(event: dict) -> tuple[bool, float, str | None]:
 
     elif event_type == "edgeConfig":
         new_edge = event.get("edge", "right")
-        global mac_edge
         mac_edge = new_edge
         log.info("Mac edge configured to '%s' — return edge is '%s'", mac_edge, OPPOSITE_EDGE.get(mac_edge, "left"))
 

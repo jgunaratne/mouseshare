@@ -300,6 +300,7 @@ def inject_event(event: dict, device: UInput):
     Returns (True, normalised_y, edge_name) if the cursor has hit the return
     edge and control should be returned to the Mac; otherwise (False, 0, None).
     """
+    global mac_edge
 
     event_type = event.get("type")
 
@@ -359,7 +360,6 @@ def inject_event(event: dict, device: UInput):
     elif event_type == "edgeConfig":
         # Mac is telling us which edge it selected.
         new_edge = event.get("edge", "right")
-        global mac_edge
         mac_edge = new_edge
         log.info("Mac edge configured to '%s' — return edge is '%s'", mac_edge, OPPOSITE_EDGE.get(mac_edge, "left"))
 
