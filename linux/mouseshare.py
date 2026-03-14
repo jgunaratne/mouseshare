@@ -368,6 +368,9 @@ def inject_event(event: dict, device: UInput):
         _release_all_keys(device)
         log.info("Mac sent returnControl — acknowledged, all keys released")
 
+    elif event_type == "heartbeat":
+        log.debug("Heartbeat received from Mac")
+
     return (False, 0, None)
 
 
@@ -507,7 +510,7 @@ async def tcp_client(device: UInput):
                 # Read 4-byte length header with timeout.
                 header = await asyncio.wait_for(
                     _read_exact(reader, 4),
-                    timeout=30.0,
+                    timeout=120.0,
                 )
                 length = struct.unpack("!I", header)[0]
 

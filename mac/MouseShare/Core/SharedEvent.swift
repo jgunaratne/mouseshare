@@ -12,6 +12,7 @@ enum SharedEventType: String, Codable {
     case scrollWheel
     case returnControl
     case edgeConfig
+    case heartbeat
 }
 
 /// A single input event with normalized coordinates and optional keyboard/scroll data.

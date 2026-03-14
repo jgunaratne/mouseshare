@@ -322,6 +322,9 @@ def inject_event(event: dict) -> tuple[bool, float, str | None]:
         _release_all_keys()
         log.info("Mac sent returnControl — all keys released")
 
+    elif event_type == "heartbeat":
+        log.debug("Heartbeat received from Mac")
+
     return (False, 0, None)
 
 
@@ -360,7 +363,7 @@ async def tcp_client(tray_update=None):
 
             while True:
                 header = await asyncio.wait_for(
-                    _read_exact(reader, 4), timeout=30.0,
+                    _read_exact(reader, 4), timeout=120.0,
                 )
                 length = struct.unpack("!I", header)[0]
                 if length == 0 or length > 1_000_000:

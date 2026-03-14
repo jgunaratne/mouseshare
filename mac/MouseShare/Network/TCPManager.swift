@@ -31,12 +31,27 @@ class TCPManager {
     private var connection: NWConnection?
     private let queue = DispatchQueue(label: "com.mouseshare.tcp", qos: .userInteractive)
     
+    /// Timer that sends heartbeat events to the connected client.
+    private var heartbeatTimer: DispatchSourceTimer?
+    
+    /// Interval between heartbeat messages (seconds).
+    private let heartbeatInterval: TimeInterval = 10
+    
     // MARK: - Server Lifecycle
     
     /// Start listening for incoming connections on the USB-C interface.
     func startListening() {
         do {
             let params = NWParameters.tcp
+            
+            // Enable TCP keepalive at the OS level for faster dead-peer detection.
+            if let tcpOptions = params.defaultProtocolStack.transportProtocol as? NWProtocolTCP.Options {
+                tcpOptions.enableKeepalive = true
+                tcpOptions.keepaliveIdle = 30     // seconds before first keepalive probe
+                tcpOptions.keepaliveInterval = 10 // seconds between probes
+                tcpOptions.keepaliveCount = 3     // probes before declaring dead
+            }
+            
             // Bind to the specific USB-C interface address
             params.requiredLocalEndpoint = NWEndpoint.hostPort(host: host, port: port)
             
@@ -94,6 +109,7 @@ class TCPManager {
             case .ready:
                 print("✅ [TCPManager] Client connected.")
                 self?.isConnected = true
+                self?.startHeartbeat()
                 DispatchQueue.main.async {
                     self?.delegate?.clientConnected()
                 }
@@ -115,6 +131,7 @@ class TCPManager {
     }
     
     private func disconnect() {
+        stopHeartbeat()
         connection?.cancel()
         connection = nil
         if isConnected {
@@ -127,11 +144,34 @@ class TCPManager {
     
     private func handleDisconnect() {
         print("📡 [TCPManager] Client disconnected.")
+        stopHeartbeat()
         connection = nil
         isConnected = false
         DispatchQueue.main.async { [weak self] in
             self?.delegate?.clientDisconnected()
         }
+    }
+    
+    // MARK: - Heartbeat
+    
+    /// Start sending periodic heartbeat events to keep the connection alive.
+    private func startHeartbeat() {
+        stopHeartbeat()
+        let timer = DispatchSource.makeTimerSource(queue: queue)
+        timer.schedule(deadline: .now() + heartbeatInterval, repeating: heartbeatInterval)
+        timer.setEventHandler { [weak self] in
+            guard let self = self, self.isConnected else { return }
+            let heartbeat = SharedEvent(type: .heartbeat)
+            self.send(heartbeat)
+        }
+        heartbeatTimer = timer
+        timer.resume()
+    }
+    
+    /// Stop the heartbeat timer.
+    private func stopHeartbeat() {
+        heartbeatTimer?.cancel()
+        heartbeatTimer = nil
     }
     
     // MARK: - Sending (Length-Prefixed JSON)

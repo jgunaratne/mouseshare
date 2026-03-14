@@ -25,6 +25,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// Whether the USB-C cable/interface has been detected.
     private var cableDetected = false
     
+    /// Number of consecutive interface checks that failed to detect the USB-C interface.
+    /// Teardown only occurs after 2+ misses to debounce transient dips.
+    private var missedInterfaceChecks = 0
+    
     // MARK: - App Lifecycle
     
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -261,21 +265,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let previouslyDetected = cableDetected
         cableDetected = detected
         
-        if detected && !previouslyDetected {
-            // Cable was just plugged in — start (or restart) the TCP listener.
-            print("🔌 [MouseShare] USB-C interface detected — starting listener.")
-            tcpManager.stopListening()   // clean up any stale listener
-            tcpManager.startListening()
-            statusBar.updateState(.waitingForLinux)
+        if detected {
+            // Cable found — reset miss counter.
+            missedInterfaceChecks = 0
             
-        } else if !detected && previouslyDetected {
-            // Cable was just unplugged — tear everything down.
-            print("🔌 [MouseShare] USB-C interface lost — stopping listener.")
-            if isControllingLinux {
-                stopControllingLinux()
+            if !previouslyDetected {
+                // Cable was just plugged in — start (or restart) the TCP listener.
+                print("🔌 [MouseShare] USB-C interface detected — starting listener.")
+                tcpManager.stopListening()   // clean up any stale listener
+                tcpManager.startListening()
+                statusBar.updateState(.waitingForLinux)
             }
-            tcpManager.stopListening()
-            statusBar.updateState(.cableNotDetected)
+        } else if previouslyDetected {
+            missedInterfaceChecks += 1
+            
+            if missedInterfaceChecks >= 2 {
+                // Cable absent for 2+ consecutive checks — tear down.
+                print("🔌 [MouseShare] USB-C interface lost (\(missedInterfaceChecks) missed checks) — stopping listener.")
+                if isControllingLinux {
+                    stopControllingLinux()
+                }
+                tcpManager.stopListening()
+                statusBar.updateState(.cableNotDetected)
+            } else {
+                print("⚠️ [MouseShare] USB-C interface not found (\(missedInterfaceChecks)/2 missed checks) — waiting…")
+            }
         }
     }
 }

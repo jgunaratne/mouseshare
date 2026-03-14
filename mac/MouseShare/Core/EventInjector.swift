@@ -41,8 +41,8 @@ class EventInjector {
         case .scrollWheel:
             postScrollEvent(deltaX: event.scrollDeltaX ?? 0, deltaY: event.scrollDeltaY ?? 0)
             
-        case .returnControl, .edgeConfig:
-            // Handled by AppDelegate, not injected locally.
+        case .returnControl, .edgeConfig, .heartbeat:
+            // Handled elsewhere or no-op — not injected locally.
             break
         }
     }
