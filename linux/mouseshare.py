@@ -207,14 +207,40 @@ def detect_display_server():
 
 
 def detect_screen_resolution():
-    """Detect the primary screen resolution and update the global constants.
+    """Detect the *logical* screen resolution and update the global constants.
 
-    Tries xrandr first (works on X11 and most XWayland setups), then
-    falls back to xdpyinfo.  If neither works, keeps the defaults.
+    Display scaling (e.g. 150 % or 200 %) means the physical pixel count
+    reported by xrandr differs from the logical coordinate space used by
+    xdotool.  We must use the logical resolution so that normalised
+    coordinates from the Mac map correctly.
+
+    Strategy:
+      1. xdotool getdisplaygeometry  — returns logical size directly (X11).
+      2. xrandr + scale-factor env   — physical size ÷ scale factor.
+      3. xdpyinfo                    — last-resort fallback.
     """
     global SCREEN_WIDTH, SCREEN_HEIGHT
 
-    # ── Try xrandr ──
+    # ── Try xdotool getdisplaygeometry (best on X11 — already logical) ──
+    if not USE_WAYLAND and shutil.which("xdotool"):
+        try:
+            result = subprocess.run(
+                ["xdotool", "getdisplaygeometry"],
+                capture_output=True, text=True, timeout=5,
+            )
+            parts = result.stdout.strip().split()
+            if len(parts) == 2:
+                SCREEN_WIDTH = int(parts[0])
+                SCREEN_HEIGHT = int(parts[1])
+                log.info(
+                    "Screen resolution (xdotool, logical): %dx%d",
+                    SCREEN_WIDTH, SCREEN_HEIGHT,
+                )
+                return
+        except Exception as exc:
+            log.debug("xdotool getdisplaygeometry failed: %s", exc)
+
+    # ── Try xrandr (apply scale factor if present) ──
     if shutil.which("xrandr"):
         try:
             result = subprocess.run(
@@ -224,9 +250,23 @@ def detect_screen_resolution():
                 # Match the currently-active mode, e.g.  "1920x1080+0+0"
                 m = re.search(r"(\d+)x(\d+)\+\d+\+\d+", line)
                 if m:
-                    SCREEN_WIDTH = int(m.group(1))
-                    SCREEN_HEIGHT = int(m.group(2))
-                    log.info("Screen resolution (xrandr): %dx%d", SCREEN_WIDTH, SCREEN_HEIGHT)
+                    phys_w = int(m.group(1))
+                    phys_h = int(m.group(2))
+                    scale = _get_display_scale_factor()
+                    SCREEN_WIDTH = int(phys_w / scale)
+                    SCREEN_HEIGHT = int(phys_h / scale)
+                    if scale != 1.0:
+                        log.info(
+                            "Screen resolution (xrandr): %dx%d physical, "
+                            "scale=%.2f, logical=%dx%d",
+                            phys_w, phys_h, scale,
+                            SCREEN_WIDTH, SCREEN_HEIGHT,
+                        )
+                    else:
+                        log.info(
+                            "Screen resolution (xrandr): %dx%d",
+                            SCREEN_WIDTH, SCREEN_HEIGHT,
+                        )
                     return
         except Exception as exc:
             log.debug("xrandr failed: %s", exc)
@@ -250,6 +290,71 @@ def detect_screen_resolution():
         "Could not detect screen resolution — using default %dx%d",
         SCREEN_WIDTH, SCREEN_HEIGHT,
     )
+
+
+def _get_display_scale_factor() -> float:
+    """Detect the display scale factor from environment or gsettings.
+
+    Returns 1.0 if no scaling is detected or detection fails.
+    """
+    # GDK_SCALE (set by GNOME / GTK apps)
+    gdk_scale = os.environ.get("GDK_SCALE")
+    if gdk_scale:
+        try:
+            scale = float(gdk_scale)
+            if scale > 0:
+                log.debug("Scale factor from GDK_SCALE: %.2f", scale)
+                return scale
+        except ValueError:
+            pass
+
+    # QT_SCALE_FACTOR (KDE / Qt apps)
+    qt_scale = os.environ.get("QT_SCALE_FACTOR")
+    if qt_scale:
+        try:
+            scale = float(qt_scale)
+            if scale > 0:
+                log.debug("Scale factor from QT_SCALE_FACTOR: %.2f", scale)
+                return scale
+        except ValueError:
+            pass
+
+    # gsettings (GNOME)
+    if shutil.which("gsettings"):
+        try:
+            result = subprocess.run(
+                ["gsettings", "get", "org.gnome.desktop.interface", "text-scaling-factor"],
+                capture_output=True, text=True, timeout=3,
+            )
+            text_scale = float(result.stdout.strip())
+
+            result2 = subprocess.run(
+                ["gsettings", "get", "org.gnome.mutter", "experimental-features"],
+                capture_output=True, text=True, timeout=3,
+            )
+            # Check for fractional scaling
+            uses_fractional = "scale-monitor-framebuffer" in result2.stdout
+
+            if not uses_fractional:
+                # Integer scaling — check the scaling factor
+                result3 = subprocess.run(
+                    ["gsettings", "get", "org.gnome.desktop.interface", "scaling-factor"],
+                    capture_output=True, text=True, timeout=3,
+                )
+                m = re.search(r"uint32\s+(\d+)", result3.stdout)
+                if m:
+                    int_scale = int(m.group(1))
+                    if int_scale > 1:
+                        log.debug("Scale factor from gsettings (integer): %d", int_scale)
+                        return float(int_scale)
+
+            # For fractional scaling, xrandr --listmonitors shows the
+            # effective transform, but xdotool getdisplaygeometry (tried
+            # first) is the most reliable source.
+        except Exception as exc:
+            log.debug("gsettings scale detection failed: %s", exc)
+
+    return 1.0
 
 # ── Virtual Input Device ──────────────────────────────────────────────
 

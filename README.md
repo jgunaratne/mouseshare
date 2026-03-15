@@ -261,6 +261,13 @@ Edit the top of `mouseshare.py` to change:
 - `MAC_IP` — Mac's USB-C IP address (default: `192.168.100.1`)
 - `PORT` — TCP port (default: `9876`)
 
+### Troubleshooting (Linux)
+
+- **Mouse position is offset with display scaling** — The script auto-detects the scale factor from `xdotool`, `GDK_SCALE`, `QT_SCALE_FACTOR`, or GNOME gsettings. If it still gets it wrong, you can force the scale factor by setting `GDK_SCALE` before running:
+  ```bash
+  GDK_SCALE=2 python3 mouseshare.py
+  ```
+
 ---
 
 ## Protocol
