@@ -214,44 +214,45 @@ The script auto-detects X11 vs. Wayland and the primary screen resolution.
 
 ### Auto-Start on Boot
 
-Create a systemd service to start MouseShare automatically:
+Create a **systemd user service** so MouseShare starts automatically after you log in. User services inherit your desktop session environment (DISPLAY, XAUTHORITY, scaling, etc.), so display detection works correctly.
 
 ```bash
+# Create the user service directory if needed
+mkdir -p ~/.config/systemd/user
+
 # Create the service file
-sudo tee /etc/systemd/system/mouseshare.service > /dev/null << 'EOF'
+cat > ~/.config/systemd/user/mouseshare.service << 'EOF'
 [Unit]
 Description=MouseShare Linux Companion
-After=network.target graphical-session.target
+After=graphical-session.target
 
 [Service]
 Type=simple
-User=YOUR_USERNAME
-Environment=DISPLAY=:0
 ExecStart=/usr/bin/python3 /path/to/linux/mouseshare.py
 Restart=on-failure
 RestartSec=5
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=graphical-session.target
 EOF
 
-# Update the User and ExecStart path, then enable
-sudo systemctl daemon-reload
-sudo systemctl enable mouseshare.service
-sudo systemctl start mouseshare.service
+# Update the ExecStart path, then enable
+systemctl --user daemon-reload
+systemctl --user enable mouseshare.service
+systemctl --user start mouseshare.service
 ```
 
-> **Tip:** Replace `YOUR_USERNAME` with your Linux username and update the `ExecStart` path to where `mouseshare.py` lives. If using Wayland, also add `Environment=WAYLAND_DISPLAY=wayland-0`.
+> **Tip:** Update the `ExecStart` path to where `mouseshare.py` lives. No `sudo` needed — user services run as your login user.
 
 ```bash
 # Check status
-sudo systemctl status mouseshare.service
+systemctl --user status mouseshare.service
 
 # View logs
-journalctl -u mouseshare.service -f
+journalctl --user -u mouseshare.service -f
 
 # Disable auto-start
-sudo systemctl disable mouseshare.service
+systemctl --user disable mouseshare.service
 ```
 
 ### Configuration

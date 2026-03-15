@@ -26,6 +26,7 @@ import struct
 import subprocess
 import sys
 import re
+import time
 
 from evdev import UInput, ecodes
 
@@ -701,6 +702,52 @@ def check_mouse_tool():
             print("   Run: sudo apt install xdotool")
             sys.exit(1)
 
+# ── Resolution Detection with Retry ──────────────────────────────────
+
+
+DISPLAY_READY_RETRIES = 10
+DISPLAY_READY_DELAY = 3.0  # seconds
+
+
+def _detect_resolution_with_retry():
+    """Try to detect the screen resolution, retrying if the display isn't ready.
+
+    On boot the systemd service may start before the graphical session is
+    fully initialised.  In that case xdotool will fail and xrandr may
+    report incorrect values.  We retry a few times with a short delay to
+    give the display server time to come up.
+    """
+    for attempt in range(1, DISPLAY_READY_RETRIES + 1):
+        detect_screen_resolution()
+
+        # Quick sanity check: try xdotool to see if the display is reachable.
+        if not USE_WAYLAND and shutil.which("xdotool"):
+            try:
+                result = subprocess.run(
+                    ["xdotool", "getdisplaygeometry"],
+                    capture_output=True, text=True, timeout=3,
+                )
+                if result.returncode == 0 and result.stdout.strip():
+                    log.info("Display is ready (attempt %d/%d)", attempt, DISPLAY_READY_RETRIES)
+                    return
+            except Exception:
+                pass
+
+            # Display not reachable yet — wait and retry.
+            if attempt < DISPLAY_READY_RETRIES:
+                log.info(
+                    "Display not ready yet — retrying in %.0fs (%d/%d)",
+                    DISPLAY_READY_DELAY, attempt, DISPLAY_READY_RETRIES,
+                )
+                time.sleep(DISPLAY_READY_DELAY)
+        else:
+            # Wayland or no xdotool — accept whatever we got.
+            return
+
+    log.warning("Display did not become ready after %d attempts — using detected resolution %dx%d",
+                DISPLAY_READY_RETRIES, SCREEN_WIDTH, SCREEN_HEIGHT)
+
+
 # ── Main ──────────────────────────────────────────────────────────────
 
 def main():
@@ -715,8 +762,8 @@ def main():
     # 3. Detect display server
     detect_display_server()
 
-    # 3b. Detect screen resolution
-    detect_screen_resolution()
+    # 3b. Detect screen resolution (retry if display isn't ready yet)
+    _detect_resolution_with_retry()
 
     # 4. Create virtual input device
     device = create_virtual_device()
