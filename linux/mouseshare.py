@@ -22,6 +22,7 @@ import json
 import logging
 import os
 import shutil
+import socket
 import struct
 import subprocess
 import sys
@@ -610,6 +611,19 @@ async def tcp_client(device: UInput):
                 asyncio.open_connection(MAC_IP, PORT),
                 timeout=5.0,
             )
+
+            # Enable TCP keepalive to detect dead connections quickly.
+            sock = writer.get_extra_info("socket")
+            if sock is not None:
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+                # Seconds before first keepalive probe.
+                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 30)
+                # Seconds between probes.
+                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 10)
+                # Number of failed probes before declaring connection dead.
+                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 3)
+                log.debug("TCP keepalive enabled (idle=30s, interval=10s, count=3)")
+
             log.info("Connected to Mac")
 
             while True:
