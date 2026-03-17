@@ -358,20 +358,36 @@ def _get_display_scale_factor() -> float:
 
     return 1.0
 
-# ── Virtual Input Device ──────────────────────────────────────────────
+# ── Virtual Input Devices ─────────────────────────────────────────────
+#
+# We create SEPARATE uinput devices for keyboard and mouse.  Modern
+# Linux input stacks (libinput) classify a device that advertises both
+# EV_KEY keyboard codes *and* EV_REL axes as a pointer, which can cause
+# keyboard events from it to be ignored or deprioritised.  Splitting
+# them ensures reliable key injection.
 
-def create_virtual_device():
-    """Create a uinput virtual keyboard + mouse device."""
+def create_virtual_devices():
+    """Create separate uinput devices for keyboard and mouse.
 
-    # All keyboard keys + mouse buttons we might inject.
-    key_caps = set(MAC_TO_LINUX_KEYCODE.values()) | {
-        ecodes.BTN_LEFT,
-        ecodes.BTN_RIGHT,
-        ecodes.BTN_MIDDLE,
+    Returns (keyboard_device, mouse_device).
+    """
+
+    # ── Keyboard device ──
+    keyboard_caps = {
+        ecodes.EV_KEY: list(set(MAC_TO_LINUX_KEYCODE.values())),
+        # Enable key-repeat so held keys auto-repeat as expected.
+        ecodes.EV_REP: [ecodes.REP_DELAY, ecodes.REP_PERIOD],
     }
+    keyboard_dev = UInput(keyboard_caps, name="MouseShare Virtual Keyboard")
+    log.info("Virtual keyboard device created: %s", keyboard_dev.device.path)
 
-    capabilities = {
-        ecodes.EV_KEY: list(key_caps),
+    # ── Mouse device ──
+    mouse_caps = {
+        ecodes.EV_KEY: [
+            ecodes.BTN_LEFT,
+            ecodes.BTN_RIGHT,
+            ecodes.BTN_MIDDLE,
+        ],
         ecodes.EV_REL: [
             ecodes.REL_X,
             ecodes.REL_Y,
@@ -379,29 +395,41 @@ def create_virtual_device():
             ecodes.REL_HWHEEL,
         ],
     }
+    mouse_dev = UInput(mouse_caps, name="MouseShare Virtual Mouse")
+    log.info("Virtual mouse device created: %s", mouse_dev.device.path)
 
-    device = UInput(capabilities, name="MouseShare Virtual Input")
-    log.info("Virtual input device created: %s", device.device.path)
-    return device
+    return keyboard_dev, mouse_dev
 
 # ── Event Injection ───────────────────────────────────────────────────
 
 # Track currently pressed keys/buttons so we can release them all
 # when control switches back to the Mac (prevents stuck keys).
 _pressed_keys: set[int] = set()
+_pressed_buttons: set[int] = set()
 
 
-def _release_all_keys(device: UInput):
+def _release_all_keys(keyboard_dev: UInput, mouse_dev: UInput):
     """Release every key and button that is currently held down."""
+    released = 0
     for code in list(_pressed_keys):
-        device.write(ecodes.EV_KEY, code, 0)
+        keyboard_dev.write(ecodes.EV_KEY, code, 0)
+        released += 1
     if _pressed_keys:
-        device.syn()
-        log.info("Released %d stuck key(s)/button(s)", len(_pressed_keys))
+        keyboard_dev.syn()
     _pressed_keys.clear()
 
+    for code in list(_pressed_buttons):
+        mouse_dev.write(ecodes.EV_KEY, code, 0)
+        released += 1
+    if _pressed_buttons:
+        mouse_dev.syn()
+    _pressed_buttons.clear()
 
-def inject_event(event: dict, device: UInput):
+    if released:
+        log.info("Released %d stuck key(s)/button(s)", released)
+
+
+def inject_event(event: dict, keyboard_dev: UInput, mouse_dev: UInput):
     """Decode a SharedEvent dict and inject the appropriate input.
 
     Returns (True, normalised_y, edge_name) if the cursor has hit the return
@@ -419,50 +447,50 @@ def inject_event(event: dict, device: UInput):
             return (True, norm_y, return_edge)
 
     elif event_type == "leftMouseDown":
-        _pressed_keys.add(ecodes.BTN_LEFT)
-        device.write(ecodes.EV_KEY, ecodes.BTN_LEFT, 1)
-        device.syn()
+        _pressed_buttons.add(ecodes.BTN_LEFT)
+        mouse_dev.write(ecodes.EV_KEY, ecodes.BTN_LEFT, 1)
+        mouse_dev.syn()
 
     elif event_type == "leftMouseUp":
-        _pressed_keys.discard(ecodes.BTN_LEFT)
-        device.write(ecodes.EV_KEY, ecodes.BTN_LEFT, 0)
-        device.syn()
+        _pressed_buttons.discard(ecodes.BTN_LEFT)
+        mouse_dev.write(ecodes.EV_KEY, ecodes.BTN_LEFT, 0)
+        mouse_dev.syn()
 
     elif event_type == "rightMouseDown":
-        _pressed_keys.add(ecodes.BTN_RIGHT)
-        device.write(ecodes.EV_KEY, ecodes.BTN_RIGHT, 1)
-        device.syn()
+        _pressed_buttons.add(ecodes.BTN_RIGHT)
+        mouse_dev.write(ecodes.EV_KEY, ecodes.BTN_RIGHT, 1)
+        mouse_dev.syn()
 
     elif event_type == "rightMouseUp":
-        _pressed_keys.discard(ecodes.BTN_RIGHT)
-        device.write(ecodes.EV_KEY, ecodes.BTN_RIGHT, 0)
-        device.syn()
+        _pressed_buttons.discard(ecodes.BTN_RIGHT)
+        mouse_dev.write(ecodes.EV_KEY, ecodes.BTN_RIGHT, 0)
+        mouse_dev.syn()
 
     elif event_type in ("keyDown", "keyUp"):
         mac_code = event.get("keyCode")
         if mac_code is None:
-            return (False, 0)
+            return (False, 0, None)
         linux_code = MAC_TO_LINUX_KEYCODE.get(mac_code)
         if linux_code is None:
             log.warning("Unknown Mac keycode %d — add it to the mapping table", mac_code)
-            return (False, 0)
+            return (False, 0, None)
         value = 1 if event_type == "keyDown" else 0
         if value == 1:
             _pressed_keys.add(linux_code)
         else:
             _pressed_keys.discard(linux_code)
-        device.write(ecodes.EV_KEY, linux_code, value)
-        device.syn()
+        keyboard_dev.write(ecodes.EV_KEY, linux_code, value)
+        keyboard_dev.syn()
 
     elif event_type == "scrollWheel":
         dx = event.get("scrollDeltaX", 0)
         dy = event.get("scrollDeltaY", 0)
         if dy:
-            device.write(ecodes.EV_REL, ecodes.REL_WHEEL, int(dy))
+            mouse_dev.write(ecodes.EV_REL, ecodes.REL_WHEEL, int(dy))
         if dx:
-            device.write(ecodes.EV_REL, ecodes.REL_HWHEEL, int(dx))
+            mouse_dev.write(ecodes.EV_REL, ecodes.REL_HWHEEL, int(dx))
         if dy or dx:
-            device.syn()
+            mouse_dev.syn()
 
     elif event_type == "edgeConfig":
         # Mac is telling us which edge it selected.
@@ -472,7 +500,7 @@ def inject_event(event: dict, device: UInput):
 
     elif event_type == "returnControl":
         # Release any keys/buttons still held down to prevent stuck keys.
-        _release_all_keys(device)
+        _release_all_keys(keyboard_dev, mouse_dev)
         log.info("Mac sent returnControl — acknowledged, all keys released")
 
     elif event_type == "heartbeat":
@@ -599,7 +627,7 @@ async def _read_exact(reader: asyncio.StreamReader, n: int) -> bytes:
     return data
 
 
-async def tcp_client(device: UInput):
+async def tcp_client(keyboard_dev: UInput, mouse_dev: UInput):
     """Connect to the Mac and process events in a loop.
     Reconnects automatically on failure."""
 
@@ -646,7 +674,7 @@ async def tcp_client(device: UInput):
                 event = json.loads(payload.decode("utf-8"))
 
                 # Inject the event and check if the cursor hit the return edge.
-                should_return, norm_y, return_edge = inject_event(event, device)
+                should_return, norm_y, return_edge = inject_event(event, keyboard_dev, mouse_dev)
 
                 if should_return:
                     log.info("%s edge hit — sending returnControl to Mac", return_edge.title())
@@ -669,7 +697,7 @@ async def tcp_client(device: UInput):
             log.error("Unexpected error: %s", exc, exc_info=True)
         finally:
             # Release any stuck keys/buttons before reconnecting.
-            _release_all_keys(device)
+            _release_all_keys(keyboard_dev, mouse_dev)
             # Close the writer cleanly.
             if writer is not None:
                 try:
@@ -779,20 +807,21 @@ def main():
     # 3b. Detect screen resolution (retry if display isn't ready yet)
     _detect_resolution_with_retry()
 
-    # 4. Create virtual input device
-    device = create_virtual_device()
+    # 4. Create virtual input devices (separate keyboard + mouse)
+    keyboard_dev, mouse_dev = create_virtual_devices()
 
     # 5. Log connection target
     log.info("Will connect to Mac at %s:%d", MAC_IP, PORT)
 
     # 6. Run the async event loop
     try:
-        asyncio.run(tcp_client(device))
+        asyncio.run(tcp_client(keyboard_dev, mouse_dev))
     except KeyboardInterrupt:
         log.info("Shutting down …")
     finally:
-        device.close()
-        log.info("Virtual device closed. Goodbye.")
+        keyboard_dev.close()
+        mouse_dev.close()
+        log.info("Virtual devices closed. Goodbye.")
 
 
 if __name__ == "__main__":
