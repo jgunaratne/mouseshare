@@ -375,8 +375,6 @@ def create_virtual_devices():
     # ── Keyboard device ──
     keyboard_caps = {
         ecodes.EV_KEY: list(set(MAC_TO_LINUX_KEYCODE.values())),
-        # Enable key-repeat so held keys auto-repeat as expected.
-        ecodes.EV_REP: [ecodes.REP_DELAY, ecodes.REP_PERIOD],
     }
     keyboard_dev = UInput(keyboard_caps, name="MouseShare Virtual Keyboard")
     log.info("Virtual keyboard device created: %s", keyboard_dev.device.path)
