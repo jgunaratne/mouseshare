@@ -1,6 +1,12 @@
 import Cocoa
 import CoreGraphics
 
+// ── Serial queue for work that must NOT block the event-tap callback ──
+// macOS disables the tap when the callback takes >~500ms, causing keyboard
+// events to leak through to local Mac apps. All slow operations (cursor warp,
+// JSON encode, TCP send) are dispatched here.
+private let eventDispatchQueue = DispatchQueue(label: "com.mouseshare.eventDispatch", qos: .userInteractive)
+
 /// Captures system-wide keyboard and mouse events using CGEventTap.
 /// All captured events are consumed (not forwarded to local apps) while active.
 class EventCapture {
@@ -109,6 +115,15 @@ class EventCapture {
     /// Timestamp of the last mouse move event we actually sent.
     private var lastMouseSendTime: CFAbsoluteTime = 0
     
+    /// Dispatch the onEvent callback off the event-tap thread.
+    /// This prevents JSON encoding + TCP send from blocking the callback.
+    private func dispatchEvent(_ event: SharedEvent) {
+        let handler = onEvent
+        eventDispatchQueue.async {
+            handler?(event)
+        }
+    }
+    
     // MARK: - Internal Event Processing
     
     /// Process a raw CGEvent and return nil to consume it (prevent local delivery).
@@ -117,7 +132,7 @@ class EventCapture {
         if shouldReturnControl {
             shouldReturnControl = false
             let returnEvent = SharedEvent(type: .returnControl)
-            onEvent?(returnEvent)
+            dispatchEvent(returnEvent)
             return nil
         }
         
@@ -152,12 +167,18 @@ class EventCapture {
             }
             if shouldReturn {
                 let returnEvent = SharedEvent(type: .returnControl)
-                onEvent?(returnEvent)
+                dispatchEvent(returnEvent)
                 return nil
             }
             
             // Warp the Mac cursor back to the pinned position so it doesn't move.
-            CGWarpMouseCursorPosition(pinnedPosition)
+            // IMPORTANT: Dispatch asynchronously to avoid blocking the event-tap
+            // callback. If the callback takes > ~500ms, macOS disables the tap
+            // and keyboard events leak to local Mac apps.
+            let pin = pinnedPosition
+            eventDispatchQueue.async {
+                CGWarpMouseCursorPosition(pin)
+            }
             
             normalizedX = virtualX
             normalizedY = virtualY
@@ -202,7 +223,7 @@ class EventCapture {
             // Escape key (keyCode 53) → return control to Mac
             if keyCode == 53 {
                 let returnEvent = SharedEvent(type: .returnControl)
-                onEvent?(returnEvent)
+                dispatchEvent(returnEvent)
                 return nil // consume the Escape key
             }
             
@@ -248,7 +269,7 @@ class EventCapture {
             return nil
         }
         
-        onEvent?(sharedEvent)
+        dispatchEvent(sharedEvent)
         return nil // consume all events while capturing
     }
 }
@@ -263,8 +284,23 @@ private func eventTapCallback(
     userInfo: UnsafeMutableRawPointer?
 ) -> Unmanaged<CGEvent>? {
     
-    // If the tap is disabled by the system (e.g. timeout), re-enable it
-    if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+    // If the tap is disabled by the system (e.g. timeout), re-enable it.
+    // IMPORTANT: While disabled, keyboard events pass through to Mac apps
+    // instead of being captured and forwarded to Linux.
+    if type == .tapDisabledByTimeout {
+        print("⚠️ [EventCapture] Event tap DISABLED by timeout — keyboard events were leaking to Mac! Re-enabling…")
+        if let userInfo = userInfo {
+            let capture = Unmanaged<EventCapture>.fromOpaque(userInfo).takeUnretainedValue()
+            if let tap = capture.eventTap {
+                CGEvent.tapEnable(tap: tap, enable: true)
+                print("✅ [EventCapture] Event tap re-enabled after timeout.")
+            }
+        }
+        return Unmanaged.passRetained(event)
+    }
+    
+    if type == .tapDisabledByUserInput {
+        print("⚠️ [EventCapture] Event tap DISABLED by user input — re-enabling…")
         if let userInfo = userInfo {
             let capture = Unmanaged<EventCapture>.fromOpaque(userInfo).takeUnretainedValue()
             if let tap = capture.eventTap {

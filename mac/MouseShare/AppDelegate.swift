@@ -74,12 +74,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.edgeDetector.check(mouseLocation: location)
         }
         
-        // 6. Configure event capture to forward events over TCP
+        // 6. Configure event capture to forward events over TCP.
+        // NOTE: This closure now runs on eventDispatchQueue (a background serial
+        // queue) to keep the CGEventTap callback from blocking.  UI work must
+        // be dispatched back to the main thread.
         eventCapture.onEvent = { [weak self] sharedEvent in
             guard let self = self else { return }
             
             if sharedEvent.type == .returnControl {
-                self.returnControlToMac()
+                DispatchQueue.main.async {
+                    self.returnControlToMac()
+                }
             } else {
                 self.tcpManager.send(sharedEvent)
             }
