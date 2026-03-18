@@ -365,6 +365,34 @@ def _get_display_scale_factor() -> float:
 # EV_KEY keyboard codes *and* EV_REL axes as a pointer, which can cause
 # keyboard events from it to be ignored or deprioritised.  Splitting
 # them ensures reliable key injection.
+#
+# IMPORTANT: The virtual keyboard MUST:
+#   1. Advertise EV_MSC / MSC_SCAN — many desktop environments (GNOME,
+#      libinput) silently drop EV_KEY events from devices that don't
+#      also emit scancode events.
+#   2. Advertise a broad range of KEY_* codes (not just the ones in our
+#      mapping table) — libinput classifies a device as a "keyboard"
+#      only if it advertises enough key codes.  A sparse set may cause
+#      it to be ignored entirely.
+#   3. Advertise EV_REP for key-repeat support.
+
+def _full_keyboard_keys() -> list[int]:
+    """Return a list of all standard keyboard key codes.
+
+    This ensures libinput sees the device as a real keyboard.
+    We include KEY_ESC (1) through KEY_COMPOSE (127) plus all
+    keys from our mapping table.
+    """
+    # Standard keyboard range: KEY_ESC=1 .. KEY_COMPOSE=127
+    keys = set(range(1, 128))
+    # Also include any mapped keys that fall outside that range.
+    keys.update(MAC_TO_LINUX_KEYCODE.values())
+    # Add numpad and media keys that might be useful.
+    for attr in dir(ecodes):
+        if attr.startswith("KEY_KP"):
+            keys.add(getattr(ecodes, attr))
+    return sorted(keys)
+
 
 def create_virtual_devices():
     """Create separate uinput devices for keyboard and mouse.
@@ -374,7 +402,9 @@ def create_virtual_devices():
 
     # ── Keyboard device ──
     keyboard_caps = {
-        ecodes.EV_KEY: list(set(MAC_TO_LINUX_KEYCODE.values())),
+        ecodes.EV_KEY: _full_keyboard_keys(),
+        ecodes.EV_MSC: [ecodes.MSC_SCAN],
+        ecodes.EV_REP: [],
     }
     keyboard_dev = UInput(keyboard_caps, name="MouseShare Virtual Keyboard")
     log.info("Virtual keyboard device created: %s", keyboard_dev.device.path)
@@ -410,6 +440,7 @@ def _release_all_keys(keyboard_dev: UInput, mouse_dev: UInput):
     """Release every key and button that is currently held down."""
     released = 0
     for code in list(_pressed_keys):
+        keyboard_dev.write(ecodes.EV_MSC, ecodes.MSC_SCAN, code)
         keyboard_dev.write(ecodes.EV_KEY, code, 0)
         released += 1
     if _pressed_keys:
@@ -477,8 +508,12 @@ def inject_event(event: dict, keyboard_dev: UInput, mouse_dev: UInput):
             _pressed_keys.add(linux_code)
         else:
             _pressed_keys.discard(linux_code)
+        # Emit MSC_SCAN before EV_KEY — many Linux desktops (GNOME, libinput)
+        # silently ignore keyboard events from devices that don't emit scancodes.
+        keyboard_dev.write(ecodes.EV_MSC, ecodes.MSC_SCAN, linux_code)
         keyboard_dev.write(ecodes.EV_KEY, linux_code, value)
         keyboard_dev.syn()
+        log.debug("Key %s: mac=%d linux=%d", event_type, mac_code, linux_code)
 
     elif event_type == "scrollWheel":
         dx = event.get("scrollDeltaX", 0)
